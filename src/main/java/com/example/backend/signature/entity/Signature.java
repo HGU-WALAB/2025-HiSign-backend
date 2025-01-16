@@ -1,10 +1,10 @@
-package walab.cap2.dongeui.signature;
+package com.example.backend.signature.entity;
 
+import com.example.backend.document.entity.Document;
+import com.example.backend.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import walab.cap2.dongeui.document.Document;
-import walab.cap2.dongeui.member.Member;
 
 import java.time.LocalDateTime;
 

@@ -1,7 +1,5 @@
 package com.example.backend.file.service;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -11,7 +9,7 @@ import java.nio.file.Paths;
 import java.util.UUID;
 
 @Service
-public class FileStorageService {
+public class FileService {
 
     public Path createDirectory(String dir) {
         Path directory = Paths.get(dir).toAbsolutePath().normalize();

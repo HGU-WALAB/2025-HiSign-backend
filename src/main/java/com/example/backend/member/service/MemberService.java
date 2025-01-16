@@ -1,4 +1,4 @@
-package walab.cap2.dongeui.member;
+package com.example.backend.member.service;
 
 public class MemberService {
 }

@@ -1,4 +1,4 @@
-package walab.cap2.dongeui.signature;
+package com.example.backend.signature.service;
 
 public class SignatureService {
 }
