@@ -54,8 +54,10 @@ public class FileService {
     }
 
     private String generateUniqueFileName(String originalFileName) {
+        String onlyFileName = originalFileName.substring(0, originalFileName.lastIndexOf("."));
+        String uniqueFileName = onlyFileName + UUID.randomUUID().toString();
         String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-        String baseName = UUID.randomUUID().toString();
-        return baseName + extension;
+
+        return uniqueFileName + extension;
     }
 }
