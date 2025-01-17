@@ -25,14 +25,5 @@ public class DocumentController {
     public List<DocumentDTO> getAllDocuments() {
         return documentService.getAllDocuments();
     }
-
-    @PostMapping("/upload")
-    public ResponseEntity<Document> uploadDocument(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "version", required = false, defaultValue = "1") Integer version) {
-
-        Document document = documentService.uploadAndSaveDocument(file, version);
-        return ResponseEntity.ok(document);
-    }
 }
 

@@ -4,6 +4,7 @@ import com.example.backend.document.dto.DocumentDTO;
 import com.example.backend.document.entity.Document;
 import com.example.backend.document.repository.DocumentRepository;
 import com.example.backend.file.service.FileService;
+import com.example.backend.member.entity.Member;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -20,13 +21,9 @@ public class DocumentService {
 
     @Autowired
     private DocumentRepository documentRepository;
-    private final FileService fileService;
-    private final Path documentStorageLocation;
 
-    public DocumentService(DocumentRepository documentRepository, FileService fileService, @Value("${file.document-dir}") String documentDir) {
+    public DocumentService(DocumentRepository documentRepository) {
         this.documentRepository = documentRepository;
-        this.fileService = fileService;
-        this.documentStorageLocation = fileService.createDirectory(documentDir);
     }
 
     public List<DocumentDTO> getAllDocuments() {
@@ -46,17 +43,13 @@ public class DocumentService {
                 .build();
     }
 
-    public Document uploadAndSaveDocument(MultipartFile file, Integer version) {
-        // 1. 파일 저장
-        String filePath;
-        try {
-            filePath = fileService.storeFile(file.getBytes(), file.getOriginalFilename(), documentStorageLocation);
-        } catch (IOException e) {
-            throw new RuntimeException("문서 파일 저장 중 오류 발생: " + file.getOriginalFilename(), e);
-        }
+    public Document saveDocument(MultipartFile file, String filePath, Integer version) {
+        Member member = new Member();
+        member.setId(1L);
 
-        // 2. Document 엔티티 생성 및 저장
+        // Document 엔티티 생성 및 저장
         Document document = new Document();
+        document.setMember(member);
         document.setFileName(file.getOriginalFilename()); // 원래 파일 이름
         document.setFilePath(filePath); // 저장된 파일 경로
         document.setVersion(version); // 버전 설정
