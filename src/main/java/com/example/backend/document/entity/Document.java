@@ -1,7 +1,7 @@
 package com.example.backend.document.entity;
 
 import com.example.backend.member.entity.Member;
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 

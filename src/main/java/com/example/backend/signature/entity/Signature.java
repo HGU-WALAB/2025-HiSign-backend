@@ -2,7 +2,7 @@ package com.example.backend.signature.entity;
 
 import com.example.backend.document.entity.Document;
 import com.example.backend.member.entity.Member;
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
