@@ -1,8 +1,8 @@
 package com.example.backend.document.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -14,7 +14,14 @@ public class DocumentDTO {
     private Long memberId; // 업로드한 회원 ID
     private String fileName;
     private String filePath;
+    private Integer version;
+
+    // 날짜 포맷 설정
+    @JsonFormat(pattern = "yyyy.MM.dd HH:mm")
     private LocalDateTime createdAt;
+
+    @JsonFormat(pattern = "yyyy.MM.dd HH:mm")
     private LocalDateTime updatedAt;
+
     private Integer status;
 }
