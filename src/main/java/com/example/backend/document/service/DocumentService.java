@@ -39,7 +39,7 @@ public class DocumentService {
         return DocumentDTO.builder()
                 .id(document.getId())
                 .fileName(document.getFileName())
-                .filePath(document.getSavedFileName())
+                .savedFileName(document.getSavedFileName())
                 .createdAt(document.getCreatedAt())
                 .updatedAt(document.getUpdatedAt())
                 .status(document.getStatus())
