@@ -17,23 +17,21 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "create_date", nullable = false, updatable = false)
-    private LocalDateTime createDate;
-
-    @Column(nullable = false, unique = true, length = 255)
-    private String email;
-
-
-    @Column(name = "login_time")
-    private LocalDateTime loginTime;
+    @Column(name = "unique_id", nullable = false, unique = true, length = 50)
+    private String uniqueId;
 
     @Column(nullable = false, length = 255)
     private String name;
 
+    @Column(nullable = false, unique = true, length = 255)
+    private String email;
+
+    @Column(name = "login_time")
+    private LocalDateTime loginTime;
+
+    @Column(name = "create_date", nullable = false, updatable = false)
+    private LocalDateTime createDate;
+
     @Column(name = "update_date", nullable = false)
     private LocalDateTime updateDate;
-
-    @Column(name = "unique_id", nullable = false, unique = true, length = 50)
-    private String uniqueId;
-
 }
