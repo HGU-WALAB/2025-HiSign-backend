@@ -19,24 +19,30 @@ import java.util.stream.Collectors;
 @Service
 public class DocumentService {
 
-    @Autowired
-    private DocumentRepository documentRepository;
+    private final DocumentRepository documentRepository;
+    private final FileService fileService;
+    private final Path documentStorageLocation;
 
-    public DocumentService(DocumentRepository documentRepository) {
+    @Autowired
+    public DocumentService(DocumentRepository documentRepository, FileService fileService, @Value("${file.document-dir}") String documentDir) {
         this.documentRepository = documentRepository;
+        this.fileService = fileService;
+        this.documentStorageLocation = fileService.createDirectory(documentDir); // 파일 저장 경로
     }
 
     public List<DocumentDTO> getAllDocuments() {
         return documentRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
+    public Document getDocumentById(Long documentId) {
+        return documentRepository.findById(documentId).orElse(null);
+    }
+
     private DocumentDTO convertToDTO(Document document) {
         return DocumentDTO.builder()
                 .id(document.getId())
-                .memberId(document.getMember().getId())
                 .fileName(document.getFileName())
                 .filePath(document.getFilePath())
-                .version(document.getVersion())
                 .createdAt(document.getCreatedAt())
                 .updatedAt(document.getUpdatedAt())
                 .status(document.getStatus())
@@ -52,12 +58,15 @@ public class DocumentService {
         document.setMember(member);
         document.setFileName(file.getOriginalFilename()); // 원래 파일 이름
         document.setFilePath(filePath); // 저장된 파일 경로
-        document.setVersion(version); // 버전 설정
         document.setStatus(0); // 초기 상태 설정
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
 
         return documentRepository.save(document);
     }
-}
 
+    // getStorageLocation 메서드를 추가하여 documentStorageLocation 반환
+    public Path getStorageLocation() {
+        return documentStorageLocation;
+    }
+}
