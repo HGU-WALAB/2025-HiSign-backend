@@ -29,14 +29,17 @@ public class Signature {
     @Column(name = "signed_at")
     private LocalDateTime signedAt;
 
-    @Column(nullable = false, length = 50)
-    private String type; // 서명 유형 ("text", "image")
+    @Column(nullable = false)
+    private int type;
 
     @Column(length = 255)
-    private String data; // Base64 이미지 또는 텍스트
+    private String image_data;
+
+    @Column(length = 255)
+    private String text_data;
 
     @Column(nullable = false)
-    private Integer status; // 서명 상태 (0: 대기 중, 1: 완료)
+    private Integer status;
 
     @Column(name = "page_number", nullable = false)
     private Integer pageNumber;
@@ -53,5 +56,5 @@ public class Signature {
     @Column(nullable = false)
     private Float height;
 
-    private String description; // 서명 요청 설명
+    private String description;
 }
