@@ -23,7 +23,6 @@ public class Member {
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    private Integer level;
 
     @Column(name = "login_time")
     private LocalDateTime loginTime;
@@ -37,9 +36,4 @@ public class Member {
     @Column(name = "unique_id", nullable = false, unique = true, length = 50)
     private String uniqueId;
 
-    private String department;
-    private Integer grade;
-    private String major1;
-    private String major2;
-    private Integer semester;
 }

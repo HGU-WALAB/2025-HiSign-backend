@@ -14,7 +14,6 @@ public class DocumentDTO {
     private Long memberId; // 업로드한 회원 ID
     private String fileName;
     private String filePath;
-    private Integer version;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Integer status;
