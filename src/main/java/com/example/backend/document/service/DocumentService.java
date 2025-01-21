@@ -43,7 +43,6 @@ public class DocumentService {
                 .id(document.getId())
                 .fileName(document.getFileName())
                 .filePath(document.getFilePath())
-                .version(document.getVersion())
                 .createdAt(document.getCreatedAt())
                 .updatedAt(document.getUpdatedAt())
                 .status(document.getStatus())
@@ -59,7 +58,6 @@ public class DocumentService {
         document.setMember(member);
         document.setFileName(file.getOriginalFilename()); // 원래 파일 이름
         document.setFilePath(filePath); // 저장된 파일 경로
-        document.setVersion(version); // 버전 설정
         document.setStatus(0); // 초기 상태 설정
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
