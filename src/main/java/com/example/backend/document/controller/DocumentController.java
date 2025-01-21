@@ -36,8 +36,8 @@ public class DocumentController {
         Document document = documentService.getDocumentById(id);
 
         if (document != null) {
-            String filePath = document.getFilePath();
-            Path path = Paths.get(documentService.getStorageLocation().toString(), filePath);
+            String savedFileName = document.getSavedFileName();
+            Path path = Paths.get(documentService.getStorageLocation().toString(), savedFileName);
             Resource file = new FileSystemResource(path.toString());
 
             if (file.exists()) {

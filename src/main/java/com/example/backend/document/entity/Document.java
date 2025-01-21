@@ -24,9 +24,8 @@ public class Document {
     @Column(nullable = false, length = 255)
     private String fileName;
 
-    @Column(name = "file_path", nullable = false)
-    private String filePath;
-
+    @Column(name = "saved_file_name", nullable = false)
+    private String savedFileName;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
