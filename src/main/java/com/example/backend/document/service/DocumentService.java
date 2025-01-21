@@ -49,7 +49,7 @@ public class DocumentService {
                 .build();
     }
 
-    public Document saveDocument(MultipartFile file, String filePath, Integer version) {
+    public Document saveDocument(MultipartFile file, String filePath) {
         Member member = new Member();
         member.setId(1L);
 
