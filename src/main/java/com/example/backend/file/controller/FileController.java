@@ -38,9 +38,8 @@ public class FileController {
         try {
             // 1. 파일 저장
             String StoredFileName = fileService.storeFile(file.getBytes(), file.getOriginalFilename(), documentStorageLocation);
-            String filePath = documentStorageLocation.resolve(StoredFileName).toString();
             // 2. 문서 정보 저장
-            Document document = documentService.saveDocument(file, filePath);
+            Document document = documentService.saveDocument(file, StoredFileName);
 
             return ResponseEntity.ok(document);
         } catch (IOException e) {
