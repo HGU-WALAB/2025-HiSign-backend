@@ -2,16 +2,20 @@ package com.example.backend.member.entity;
 
 
 import javax.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+
+import com.example.backend.auth.dto.AuthDto;
+import com.example.backend.base.entity.BaseTime;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "member")
 @Getter
-@Setter
-public class Member {
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Member extends BaseTime {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,9 +33,16 @@ public class Member {
     @Column(name = "login_time")
     private LocalDateTime loginTime;
 
-    @Column(name = "create_date", nullable = false, updatable = false)
-    private LocalDateTime createDate;
+    public void update(AuthDto dto) {
+        this.name = dto.getName();
+        this.email = dto.getEmail();
+    }
 
-    @Column(name = "update_date", nullable = false)
-    private LocalDateTime updateDate;
+    public static Member from(AuthDto dto) {
+        return Member.builder()
+                .uniqueId(dto.getUniqueId())
+                .name(dto.getName())
+                .email(dto.getEmail())
+                .build();
+    }
 }
