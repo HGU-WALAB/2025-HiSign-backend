@@ -14,7 +14,6 @@ public class DocumentDTO {
     private Long memberId; // 업로드한 회원 ID
     private String fileName;
     private String savedFileName;
-    private Integer version;
 
     // 날짜 포맷 설정
     @JsonFormat(pattern = "yyyy.MM.dd HH:mm")

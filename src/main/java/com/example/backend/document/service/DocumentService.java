@@ -48,7 +48,7 @@ public class DocumentService {
 
     public Document saveDocument(MultipartFile file, String savedFileName) {
         Member member = new Member();
-        member.setId(1L);
+        member.builder().id(1L).build();
 
         // Document 엔티티 생성 및 저장
         Document document = new Document();
