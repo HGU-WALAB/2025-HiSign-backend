@@ -9,6 +9,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.Path;
@@ -28,7 +29,15 @@ public class DocumentController {
 
     @GetMapping("/list")
     public List<DocumentDTO> getAllDocuments() {
-        return documentService.getAllDocuments();
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        String uniqueId;
+        if (principal instanceof String) {  // uniqueId가 String으로 저장됨
+            uniqueId = (String) principal;
+        } else {
+            throw new IllegalStateException("Unexpected principal type");
+        }
+        return documentService.getDocumentsByUniqueId(uniqueId);
     }
 
     @GetMapping("/{id}")
