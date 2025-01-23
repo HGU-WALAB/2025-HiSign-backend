@@ -22,6 +22,7 @@ public class AuthController {
 
   @PostMapping("/login")
   public ResponseEntity<LoginResponse> Login(@RequestBody LoginRequest request) {
-    return ResponseEntity.ok(LoginResponse.from(authService.login(hisnetLoginService.callHisnetLoginApi(AuthDto.from(request)))));
+    LoginResponse ls = LoginResponse.from(authService.login(hisnetLoginService.callHisnetLoginApi(AuthDto.from(request))));
+    return ResponseEntity.ok(ls);
   }
 }
