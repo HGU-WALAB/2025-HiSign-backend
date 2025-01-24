@@ -33,9 +33,33 @@ public class Member extends BaseTime {
     @Column(name = "login_time")
     private LocalDateTime loginTime;
 
+    @Column(nullable = false, length = 50)
+    private String department;
+
+    @Column(nullable = false, length = 50)
+    private String major1;
+
+    @Column(nullable = false, length = 50)
+    private String major2;
+
+    @Column(nullable = false)
+    private Integer grade;
+
+    @Column
+    private Integer semester;
+
+    @Column(nullable = false)
+    private Integer level;
+
+
     public void update(AuthDto dto) {
         this.name = dto.getName();
         this.email = dto.getEmail();
+        this.department = dto.getDepartment();
+        this.major1 = dto.getMajor1();
+        this.major2 = dto.getMajor2();
+        this.grade = dto.getGrade();
+        this.semester = dto.getSemester();
     }
 
     public static Member from(AuthDto dto) {
@@ -43,6 +67,12 @@ public class Member extends BaseTime {
                 .uniqueId(dto.getUniqueId())
                 .name(dto.getName())
                 .email(dto.getEmail())
+                .loginTime(LocalDateTime.now())
+                .department(dto.getDepartment())
+                .major1(dto.getMajor1())
+                .major2(dto.getMajor2())
+                .grade(dto.getGrade())
+                .semester(dto.getSemester())
                 .build();
     }
 }

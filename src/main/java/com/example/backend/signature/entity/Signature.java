@@ -24,9 +24,8 @@ public class Signature {
     @JoinColumn(name = "document_id", nullable = false)
     private Document document;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    @Column(nullable = false, length = 50)
+    private String signer_email;
 
     @Column(name = "signed_at")
     private LocalDateTime signedAt;

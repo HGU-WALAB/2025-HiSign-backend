@@ -28,10 +28,11 @@ public class SignatureRequest {
     @JoinColumn(name = "document_id", nullable = false)
     private Document document; // 문서 ID (외래 키)
 
-    // 서명자 정보 추가 (각 서명자별 개별 요청을 식별)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member signer;
+    @Column(nullable = false, length = 50)
+    private String signerName;
+
+    @Column(nullable = false, length = 50)
+    private String signerEmail;
 
     @Column(name = "token", length = 255, nullable = false)
     private String token; // 서명 요청 URL 토큰
