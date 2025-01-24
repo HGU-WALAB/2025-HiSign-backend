@@ -58,16 +58,18 @@ public class SignatureRequestController {
         // 4. 서명 필드 저장
         for (SignatureRequest request : requests) {
             for (SignatureDTO fieldDto : requestDto.getSignatureFields()) {
-                signatureService.createSignatureRegion(
-                        document,
-                        request.getSigner(),
-                        fieldDto.getType(),
-                        fieldDto.getPosition().getPageNumber(),
-                        fieldDto.getPosition().getX(),
-                        fieldDto.getPosition().getY(),
-                        fieldDto.getWidth(),
-                        fieldDto.getHeight()
-                );
+                if(request.getSigner().getEmail().equals(fieldDto.getSignerEmail())) {
+                    signatureService.createSignatureRegion(
+                            document,
+                            request.getSigner(),
+                            fieldDto.getType(),
+                            fieldDto.getPosition().getPageNumber(),
+                            fieldDto.getPosition().getX(),
+                            fieldDto.getPosition().getY(),
+                            fieldDto.getWidth(),
+                            fieldDto.getHeight()
+                    );
+                }
             }
         }
 
