@@ -1,4 +1,11 @@
 package com.example.backend.signatureRequest.repository;
 
-public interface SignatureRequestRepository {
+import com.example.backend.signatureRequest.entity.SignatureRequest;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface SignatureRequestRepository extends JpaRepository<SignatureRequest, Long> {
 }

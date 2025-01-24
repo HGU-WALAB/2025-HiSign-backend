@@ -3,15 +3,17 @@ package com.example.backend.signature.entity;
 import com.example.backend.document.entity.Document;
 import com.example.backend.member.entity.Member;
 import javax.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "signature")
 @Getter
-@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Signature {
 
     @Id
