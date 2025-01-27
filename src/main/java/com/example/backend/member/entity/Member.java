@@ -74,6 +74,7 @@ public class Member extends BaseTime {
                 .major2(dto.getMajor2())
                 .grade(dto.getGrade())
                 .semester(dto.getSemester())
+                .level(dto.getLevel())
                 .build();
     }
 

@@ -20,6 +20,7 @@ public class AuthDto {
   private String major2;
   private Integer grade;
   private Integer semester;
+  private Integer level;
 
   public static AuthDto from(LoginRequest request) {
     return AuthDto.builder().hisnetToken(request.getHisnetToken()).build();
