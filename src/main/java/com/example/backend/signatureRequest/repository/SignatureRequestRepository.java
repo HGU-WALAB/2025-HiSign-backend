@@ -8,4 +8,7 @@ import java.util.List;
 
 @Repository
 public interface SignatureRequestRepository extends JpaRepository<SignatureRequest, Long> {
+    List<SignatureRequest> findByDocumentId(Long documentId);
+
+    void deleteByDocumentId(Long documentId);
 }

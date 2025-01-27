@@ -64,5 +64,16 @@ public class DocumentController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
+
+    @DeleteMapping("/{documentId}")
+    public ResponseEntity<String> deleteDocument(@PathVariable Long documentId) {
+        boolean deleted = documentService.deleteDocumentById(documentId);
+        if (deleted) {
+            return ResponseEntity.ok("문서 및 관련 서명 요청이 성공적으로 삭제되었습니다.");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("해당 문서를 찾을 수 없습니다.");
+        }
+    }
 }
 

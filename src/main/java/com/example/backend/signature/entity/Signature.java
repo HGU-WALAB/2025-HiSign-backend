@@ -25,7 +25,7 @@ public class Signature {
     private Document document;
 
     @Column(nullable = false, length = 50)
-    private String signer_email;
+    private String signerEmail;
 
     @Column(name = "signed_at")
     private LocalDateTime signedAt;

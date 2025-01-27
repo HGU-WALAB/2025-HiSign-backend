@@ -5,6 +5,7 @@ import javax.persistence.*;
 
 import com.example.backend.auth.dto.AuthDto;
 import com.example.backend.base.entity.BaseTime;
+import com.example.backend.member.entity.enums.Role;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -74,5 +75,9 @@ public class Member extends BaseTime {
                 .grade(dto.getGrade())
                 .semester(dto.getSemester())
                 .build();
+    }
+
+    public String getRole() {
+        return Role.fromLevel(this.level).getRoleName();
     }
 }

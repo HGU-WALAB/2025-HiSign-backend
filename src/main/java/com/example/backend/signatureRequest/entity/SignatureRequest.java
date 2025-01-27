@@ -4,15 +4,13 @@ import javax.persistence.*;
 
 import com.example.backend.document.entity.Document;
 import com.example.backend.member.entity.Member;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -50,4 +48,5 @@ public class SignatureRequest {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
 }

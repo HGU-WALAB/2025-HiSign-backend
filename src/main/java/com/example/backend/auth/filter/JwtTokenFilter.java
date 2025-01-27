@@ -19,9 +19,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
@@ -32,9 +30,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
   private final String SECRET_KEY;
 
   // 허용할 경로 목록 (CORS 예외 처리)
-  private static final List<String> EXCLUDED_PATHS = Arrays.asList(
-          "/api/auth/.*"
-  );
+
+  private static final Pattern EXCLUDED_PATH_PATTERN = Pattern.compile("^/api/auth/.*");
 
   @Override
   protected void doFilterInternal(
@@ -63,17 +60,14 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     Member loginMember = authService.getLoginMember(JwtUtil.getUserId(token, SECRET_KEY));
 
+
     // loginUser 정보로 UsernamePasswordAuthenticationToken 발급
     UsernamePasswordAuthenticationToken authenticationToken =
         new UsernamePasswordAuthenticationToken(
                 loginMember.getUniqueId(),
             null,
-            null);
-            //현재는 관리자와 사용자를 구분 하지 않고 있음.
-            //이건 자바 11버전
-            //List.of(new SimpleGrantedAuthority(loginMember.getName())));
-            //이건 자바 8버전
-            //Collections.singletonList(new SimpleGrantedAuthority(loginMember.getName())));
+                Collections.singletonList(new SimpleGrantedAuthority(loginMember.getRole())));
+
 
     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
@@ -83,6 +77,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
   }
   // 특정 URL이 필터링 예외 대상인지 확인하는 메서드
   private boolean isExcludedPath(String requestURI) {
-    return EXCLUDED_PATHS.stream().anyMatch(requestURI::matches);
+    return EXCLUDED_PATH_PATTERN.matcher(requestURI).matches();
   }
+
 }

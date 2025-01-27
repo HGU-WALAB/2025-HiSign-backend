@@ -19,10 +19,10 @@ public class SignatureService {
         this.signatureRepository = signatureRepository;
     }
 
-    public void createSignatureRegion(Document document, Member signer, int type, int pageNumber, float x, float y, float width, float height) {
+    public void createSignatureRegion(Document document, String signerEmail, int type, int pageNumber, float x, float y, float width, float height) {
         Signature signature = Signature.builder()
                 .document(document)
-                .member(signer)
+                .signerEmail(signerEmail)
                 .signedAt(null)
                 .type(type)
                 .image_data(null)
@@ -41,7 +41,7 @@ public class SignatureService {
     public Signature saveSignature(Document document, Member signer, int type, String imageData, String textData) {
         Signature signature = Signature.builder()
                 .document(document)
-                .member(signer)
+                .signerEmail(signer.getEmail())
                 .signedAt(LocalDateTime.now())
                 .type(type)
                 .image_data(imageData)
