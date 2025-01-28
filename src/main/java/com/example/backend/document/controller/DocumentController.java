@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -50,13 +52,21 @@ public class DocumentController {
             Resource file = new FileSystemResource(path.toString());
 
             if (file.exists()) {
-                HttpHeaders headers = new HttpHeaders();
-                headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + file.getFilename());
+                try {
+                    // 파일명 URL 인코딩
+                    String encodedFileName = URLEncoder.encode(file.getFilename(), StandardCharsets.UTF_8.toString())
+                            .replace("+", "%20"); // 공백을 `%20`으로 치환
 
-                return ResponseEntity.ok()
-                        .headers(headers)
-                        .header("Content-Type", "application/pdf")
-                        .body(file);
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName);
+
+                    return ResponseEntity.ok()
+                            .headers(headers)
+                            .header("Content-Type", "application/pdf")
+                            .body(file);
+                } catch (Exception e) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+                }
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             }
