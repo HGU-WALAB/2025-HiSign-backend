@@ -30,7 +30,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
   private final String SECRET_KEY;
 
   // 허용할 경로 목록 (CORS 예외 처리)
-  private static final Pattern EXCLUDED_PATH_PATTERN = Pattern.compile("^(/hisign_1/api/auth/.*|/hisign_1/swagger-ui/.*|/hisign_1/v3/api-docs/.*|/hisign_1/v3/api-docs|/hisign_1/swagger-resources/.*|/hisign_1/webjars/.*|/hisign_1/swagger-ui.html)$");
+  private static final Pattern EXCLUDED_PATH_PATTERN = Pattern.compile("^(/api/auth/.*|/hisign_1/api/auth/.*|/hisign_1/swagger-ui/.*|/hisign_1/v3/api-docs/.*|/hisign_1/v3/api-docs|/hisign_1/swagger-resources/.*|/hisign_1/webjars/.*|/hisign_1/swagger-ui.html)$");
 
   @Override
   protected void doFilterInternal(
