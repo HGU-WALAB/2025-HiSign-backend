@@ -19,7 +19,7 @@ public class MailService {
 
     public void sendSignatureRequestEmails(List<SignatureRequest> requests) {
         for (SignatureRequest request : requests) {
-            String recipientEmail = request.getSigner().getEmail();
+            String recipientEmail = request.getSignerEmail();
             String token = request.getToken();
             String documentName = request.getDocument().getFileName();
             //String signatureUrl = "https://your-site.com/sign?token=" + token;

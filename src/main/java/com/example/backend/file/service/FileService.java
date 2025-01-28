@@ -53,6 +53,14 @@ public class FileService {
         }
     }
 
+    public void deleteDocumentFile(Path filePath) {
+        try {
+            Files.deleteIfExists(filePath);
+        } catch (IOException e) {
+            throw new RuntimeException("파일 삭제 중 오류 발생: " + filePath, e);
+        }
+    }
+
     private String generateUniqueFileName(String originalFileName) {
         String onlyFileName = originalFileName.substring(0, originalFileName.lastIndexOf("."));
         String uniqueFileName = onlyFileName + UUID.randomUUID().toString();

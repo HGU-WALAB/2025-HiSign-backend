@@ -46,14 +46,15 @@ public class HisnetLoginService {
       Map<String, Object> result = resultMap.getBody();
       assert result != null;
       return AuthDto.builder()
-          .uniqueId(result.get("uniqueId").toString())
-          .name(result.get("name").toString())
-          .email(result.get("email").toString())
-          .department(result.get("department").toString())
-          .major1(result.get("major1").toString())
-          .major2(result.get("major2").toString())
-          .grade(Integer.parseInt(result.get("grade").toString()))
-          .semester(Integer.parseInt(result.get("semester").toString()))
+              .uniqueId(result.get("uniqueId").toString())
+              .name(result.get("name").toString())
+              .email(result.get("email").toString())
+              .department(result.get("department").toString())
+              .major1(result.get("major1").toString())
+              .major2(result.get("major2").toString())
+              .grade(Integer.parseInt(result.get("grade").toString()))
+              .semester(Integer.parseInt(result.get("semester").toString()))
+              .level(0)
               .build();
     } catch (HttpStatusCodeException e) {
       Map<String, Object> result = new HashMap<>();
