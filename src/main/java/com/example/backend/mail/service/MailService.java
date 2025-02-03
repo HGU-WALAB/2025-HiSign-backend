@@ -1,6 +1,7 @@
 package com.example.backend.mail.service;
 
 import com.example.backend.signatureRequest.entity.SignatureRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,9 @@ import java.util.List;
 
 @Service
 public class MailService {
+
+    @Value("${custom.host.client}")
+    private String client;
     private final JavaMailSender mailSender;
 
     public MailService(JavaMailSender mailSender) {
@@ -22,8 +26,7 @@ public class MailService {
             String recipientEmail = request.getSignerEmail();
             String token = request.getToken();
             String documentName = request.getDocument().getFileName();
-            //String signatureUrl = "https://your-site.com/sign?token=" + token;
-            String signatureUrl = "http://localhost:8080/sign?token=" + token;
+            String signatureUrl =  client + "/sign?token=" + token;
 
             sendEmail(recipientEmail, documentName, signatureUrl);
         }
