@@ -35,15 +35,6 @@ public class FileService {
         }
     }
 
-    public void deleteFile(String fileName, Path storageLocation) {
-        try {
-            Path filePath = storageLocation.resolve(fileName).normalize();
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
-            throw new RuntimeException("파일 삭제 중 오류 발생: " + fileName, e);
-        }
-    }
-
     public byte[] readFile(String fileName, Path storageLocation) {
         try {
             Path filePath = storageLocation.resolve(fileName).normalize();

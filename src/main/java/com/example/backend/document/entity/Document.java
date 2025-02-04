@@ -18,7 +18,7 @@ public class Document {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
+    @JoinColumn(name = "unique_id", referencedColumnName = "unique_id", nullable = false)
     private Member member; // 업로드한 회원
 
     @Column(nullable = false, length = 255)

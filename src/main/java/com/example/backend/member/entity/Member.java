@@ -8,6 +8,7 @@ import com.example.backend.base.entity.BaseTime;
 import com.example.backend.member.entity.enums.Role;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,13 +17,13 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Member extends BaseTime {
+public class Member extends BaseTime implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "unique_id", unique = true, length = 50)
+    @Column(name = "unique_id", nullable = false, unique = true, length = 50)
     private String uniqueId;
 
     @Column(nullable = false, length = 255)
