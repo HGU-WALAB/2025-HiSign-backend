@@ -58,10 +58,8 @@ public class SignatureRequestController {
     @PostMapping("/request")
     public ResponseEntity<String> sendSignatureRequest(@RequestBody SignatureRequestDTO requestDto) {
         // 1. 문서 조회
-        Document document = documentService.getDocumentById(requestDto.getDocumentId());
-        if (document == null) {
-            return ResponseEntity.badRequest().body("문서를 찾을 수 없습니다.");
-        }
+        Document document = documentService.getDocumentById(requestDto.getDocumentId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
 
         // 2. 서명 요청 생성 및 저장
         List<SignatureRequest> requests = signatureRequestService.createSignatureRequests(document, requestDto.getSigners());
@@ -123,6 +121,7 @@ public class SignatureRequestController {
 
     @GetMapping("/check")
     public ResponseEntity<?> checkSignatureRequestToken(@RequestParam String token) {
+        System.out.println("checkSignatureRequestToken: " + token);
         Optional<SignatureRequest> signatureRequestOpt = signatureRequestRepository.findByToken(token);
 
         // 1️⃣ 토큰이 존재하지 않는 경우
@@ -164,22 +163,10 @@ public class SignatureRequestController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
 
-
-        // 5️⃣ 서명할 문서 정보 조회
-        Document document = documentRepository.findById(signatureRequest.getDocument().getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
-
-        // 6️⃣ 서명자의 서명 필드 정보 조회 (기존 SignatureDTO 사용)
-        List<SignatureDTO> signatureFields = signatureRepository
-                .findByDocumentIdAndSignerEmail(document.getId(), request.getEmail())
-                .stream()
-                .map(SignatureDTO::fromEntity)
-                .collect(Collectors.toList());
-
-        // 7️⃣ 문서 정보 + 서명 필드 정보 반환
-        DocumentWithSignatureFieldsDTO response = new DocumentWithSignatureFieldsDTO(document.getId(), signatureFields);
+        // 5️⃣ 문서 ID 반환
+        Map<String, Object> response = new HashMap<>();
+        response.put("documentId", signatureRequest.getDocument().getId());
 
         return ResponseEntity.ok(response);
     }
-
 }
