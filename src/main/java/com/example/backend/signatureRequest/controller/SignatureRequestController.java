@@ -8,12 +8,14 @@ import com.example.backend.signature.service.SignatureService;
 import com.example.backend.signatureRequest.DTO.SignatureRequestDTO;
 import com.example.backend.signatureRequest.DTO.SignerDTO;
 import com.example.backend.signatureRequest.entity.SignatureRequest;
+import com.example.backend.signatureRequest.repository.SignatureRequestRepository;
 import com.example.backend.signatureRequest.service.SignatureRequestService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/signature-requests")
@@ -23,15 +25,18 @@ public class SignatureRequestController {
     private final SignatureService signatureService;
     private final SignatureRequestService signatureRequestService;
     private final MailService mailService;
+    private final SignatureRequestRepository signatureRequestRepository;
 
     public SignatureRequestController(DocumentService documentService,
                                       SignatureService signatureService,
                                       SignatureRequestService signatureRequestService,
-                                      MailService mailService) {
+                                      MailService mailService,
+                                      SignatureRequestRepository signatureRequestRepository) {
         this.documentService = documentService;
         this.signatureService = signatureService;
         this.signatureRequestService = signatureRequestService;
         this.mailService = mailService;
+        this.signatureRequestRepository = signatureRequestRepository;
     }
 
     @PostMapping("/request")
@@ -98,6 +103,19 @@ public class SignatureRequestController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("해당 문서에 대한 서명 요청을 찾을 수 없습니다.");
         }
+    }
+
+    @GetMapping("/check")
+    public ResponseEntity<?> checkSignatureRequestToken(@RequestParam String token) {
+        Optional<SignatureRequest> signatureRequestOpt = signatureRequestRepository.findByToken(token);
+
+        // 1️⃣ 토큰이 존재하지 않는 경우
+        if (!signatureRequestOpt.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("잘못된 서명 요청입니다.");
+        }
+
+        // 2️⃣ 토큰이 유효하면 200 OK 반환
+        return ResponseEntity.ok("유효한 서명 요청입니다.");
     }
 
 }

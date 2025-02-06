@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SignatureRequestRepository extends JpaRepository<SignatureRequest, Long> {
@@ -22,4 +23,6 @@ public interface SignatureRequestRepository extends JpaRepository<SignatureReque
     @Transactional
     @Query("UPDATE SignatureRequest s SET s.status = 2 WHERE s.document.id = :documentId")
     int updateRequestStatusToRejected(@Param("documentId") Long documentId);
+
+    Optional<SignatureRequest> findByToken(String token);
 }

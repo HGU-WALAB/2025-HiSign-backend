@@ -66,6 +66,7 @@ public class DocumentController {
 
             if (file.exists()) {
                 try {
+                    // 파일명 URL 인코딩
                     String encodedFileName = URLEncoder.encode(file.getFilename(), StandardCharsets.UTF_8.toString())
                             .replace("+", "%20");
 
