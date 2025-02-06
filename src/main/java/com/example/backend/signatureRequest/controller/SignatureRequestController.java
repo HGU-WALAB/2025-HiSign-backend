@@ -21,7 +21,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Signature;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -153,10 +155,15 @@ public class SignatureRequestController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("서명 요청이 만료되었습니다.");
         }
 
-        // 4️⃣ 이미 서명이 완료된 경우 차단
-        if (signatureRequest.getStatus() == 1) { // 1 = 완료
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("이미 완료된 서명 요청입니다.");
+        // 4️⃣ 서명 요청 상태 확인 (대기 중(0)이 아닐 경우 차단)
+        if (signatureRequest.getStatus() != 0) { // 0 = 대기 중
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "서명 요청을 진행할 수 없는 상태입니다.");
+            response.put("status", signatureRequest.getStatus()); // 상태 값 추가
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
+
 
         // 5️⃣ 서명할 문서 정보 조회
         Document document = documentRepository.findById(signatureRequest.getDocument().getId())
