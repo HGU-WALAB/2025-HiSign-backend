@@ -84,6 +84,20 @@ public class SignatureRequestController {
         }
     }
 
+    @PutMapping("/reject/{documentId}")
+    public ResponseEntity<String> rejectSignatureRequestsByDocument(@PathVariable Long documentId) {
+        System.out.println("[API 호출] 요청 거절 - 문서 ID: " + documentId);
 
+        int rejectedCount = signatureRequestService.rejectSignatureRequestsByDocumentId(documentId);
+
+        if (rejectedCount > 0) {
+            System.out.println("[성공] 서명 요청 거절됨: " + rejectedCount + "개 (document_id=" + documentId + ")");
+            return ResponseEntity.ok("총 " + rejectedCount + "개의 서명 요청이 거절되었습니다.");
+        } else {
+            System.out.println("[실패] 거절할 서명 요청을 찾을 수 없음 - document_id=" + documentId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("해당 문서에 대한 서명 요청을 찾을 수 없습니다.");
+        }
+    }
 
 }
