@@ -1,21 +1,29 @@
 package com.example.backend.signatureRequest.controller;
 
 import com.example.backend.document.entity.Document;
+import com.example.backend.document.repository.DocumentRepository;
 import com.example.backend.document.service.DocumentService;
 import com.example.backend.mail.service.MailService;
 import com.example.backend.signature.DTO.SignatureDTO;
+import com.example.backend.signature.repository.SignatureRepository;
 import com.example.backend.signature.service.SignatureService;
+import com.example.backend.signatureRequest.DTO.DocumentWithSignatureFieldsDTO;
 import com.example.backend.signatureRequest.DTO.SignatureRequestDTO;
 import com.example.backend.signatureRequest.DTO.SignerDTO;
+import com.example.backend.signatureRequest.controller.request.SignatureValidationRequest;
 import com.example.backend.signatureRequest.entity.SignatureRequest;
 import com.example.backend.signatureRequest.repository.SignatureRequestRepository;
 import com.example.backend.signatureRequest.service.SignatureRequestService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Signature;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/signature-requests")
@@ -26,17 +34,23 @@ public class SignatureRequestController {
     private final SignatureRequestService signatureRequestService;
     private final MailService mailService;
     private final SignatureRequestRepository signatureRequestRepository;
+    private final DocumentRepository documentRepository;
+    private final SignatureRepository signatureRepository;
 
     public SignatureRequestController(DocumentService documentService,
                                       SignatureService signatureService,
                                       SignatureRequestService signatureRequestService,
                                       MailService mailService,
-                                      SignatureRequestRepository signatureRequestRepository) {
+                                      SignatureRequestRepository signatureRequestRepository,
+                                      DocumentRepository documentRepository,
+                                      SignatureRepository signatureRepository) {
         this.documentService = documentService;
         this.signatureService = signatureService;
         this.signatureRequestService = signatureRequestService;
         this.mailService = mailService;
         this.signatureRequestRepository = signatureRequestRepository;
+        this.documentRepository = documentRepository;
+        this.signatureRepository = signatureRepository;
     }
 
     @PostMapping("/request")
@@ -116,6 +130,49 @@ public class SignatureRequestController {
 
         // 2️⃣ 토큰이 유효하면 200 OK 반환
         return ResponseEntity.ok("유효한 서명 요청입니다.");
+    }
+
+    @PostMapping("/validate")
+    public ResponseEntity<?> validateSignatureRequest(@RequestBody SignatureValidationRequest request) {
+        Optional<SignatureRequest> signatureRequestOpt = signatureRequestRepository.findByToken(request.getToken());
+
+        // 1️⃣ 토큰이 존재하는지 확인
+        if (!signatureRequestOpt.isPresent()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 요청입니다.");
+        }
+
+        SignatureRequest signatureRequest = signatureRequestOpt.get();
+
+        // 2️⃣ 이메일 검증 (해당 서명 요청을 받은 사용자인지 확인)
+        if (!signatureRequest.getSignerEmail().equals(request.getEmail())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("이메일이 일치하지 않습니다.");
+        }
+
+        // 3️⃣ 요청 만료 시간 확인
+        if (signatureRequest.getExpiredAt().isBefore(LocalDateTime.now())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("서명 요청이 만료되었습니다.");
+        }
+
+        // 4️⃣ 이미 서명이 완료된 경우 차단
+        if (signatureRequest.getStatus() == 1) { // 1 = 완료
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("이미 완료된 서명 요청입니다.");
+        }
+
+        // 5️⃣ 서명할 문서 정보 조회
+        Document document = documentRepository.findById(signatureRequest.getDocument().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
+
+        // 6️⃣ 서명자의 서명 필드 정보 조회 (기존 SignatureDTO 사용)
+        List<SignatureDTO> signatureFields = signatureRepository
+                .findByDocumentIdAndSignerEmail(document.getId(), request.getEmail())
+                .stream()
+                .map(SignatureDTO::fromEntity)
+                .collect(Collectors.toList());
+
+        // 7️⃣ 문서 정보 + 서명 필드 정보 반환
+        DocumentWithSignatureFieldsDTO response = new DocumentWithSignatureFieldsDTO(document.getId(), signatureFields);
+
+        return ResponseEntity.ok(response);
     }
 
 }
