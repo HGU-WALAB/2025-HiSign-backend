@@ -1,5 +1,6 @@
 package com.example.backend.document.controller;
 
+import com.example.backend.auth.dto.AuthDto;
 import com.example.backend.document.dto.DocumentDTO;
 import com.example.backend.document.entity.Document;
 import com.example.backend.document.service.DocumentService;
@@ -29,17 +30,29 @@ public class DocumentController {
         this.documentService = documentService;
     }
 
-    @GetMapping("/list")
-    public List<DocumentDTO> getAllDocuments() {
+    // 요청한 문서 리스트
+    @GetMapping("/requested-documents")
+    public List<DocumentDTO> getRequestedDocuments() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        String uniqueId;
-        if (principal instanceof String) {  // uniqueId가 String으로 저장됨
-            uniqueId = (String) principal;
-        } else {
-            throw new IllegalStateException("Unexpected principal type");
+        String uniqueId = (principal instanceof AuthDto) ? ((AuthDto)principal).getUniqueId()  : null;
+        if (uniqueId == null) {
+            throw new IllegalStateException("Invalid user");
         }
+
         return documentService.getDocumentsByUniqueId(uniqueId);
+    }
+
+    @GetMapping("/received-documents")
+    public List<DocumentDTO> getReceivedDocuments() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        String email = (principal instanceof AuthDto) ? ((AuthDto)principal).getEmail()  : null;
+        if (email == null) {
+            throw new IllegalStateException("사용자의 이메일을 찾을 수 없습니다.");
+        }
+
+        return documentService.getDocumentsBySignerEmail(email);
     }
 
     @GetMapping("/{id}")
@@ -53,9 +66,8 @@ public class DocumentController {
 
             if (file.exists()) {
                 try {
-                    // 파일명 URL 인코딩
                     String encodedFileName = URLEncoder.encode(file.getFilename(), StandardCharsets.UTF_8.toString())
-                            .replace("+", "%20"); // 공백을 `%20`으로 치환
+                            .replace("+", "%20");
 
                     HttpHeaders headers = new HttpHeaders();
                     headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName);

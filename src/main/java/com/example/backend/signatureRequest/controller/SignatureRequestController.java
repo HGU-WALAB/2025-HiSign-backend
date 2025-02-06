@@ -69,15 +69,21 @@ public class SignatureRequestController {
 
     @PutMapping("/cancel/{documentId}")
     public ResponseEntity<String> cancelSignatureRequests(@PathVariable Long documentId) {
+        System.out.println("API 호출됨: /cancel/" + documentId);
+
         boolean isCancelled = documentService.cancelRequest(documentId);
         int cancelledCount = signatureRequestService.cancelSignatureRequestsByDocumentId(documentId);
+
         if (cancelledCount > 0 && isCancelled) {
+            System.out.println("서명 요청 취소됨: " + cancelledCount + "개, documentId: " + documentId);
             return ResponseEntity.ok("총 " + cancelledCount + "개의 서명 요청이 취소되었습니다.");
         } else {
+            System.out.println("취소할 서명 요청을 찾을 수 없음: documentId=" + documentId);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("해당 문서에 대한 서명 요청을 찾을 수 없습니다.");
         }
     }
+
 
 
 }

@@ -1,5 +1,6 @@
 package com.example.backend.auth.filter;
 
+import com.example.backend.auth.dto.AuthDto;
 import com.example.backend.auth.exception.DoNotLoginException;
 import com.example.backend.auth.exception.WrongTokenException;
 import com.example.backend.auth.service.AuthService;
@@ -64,7 +65,10 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     UsernamePasswordAuthenticationToken authenticationToken =
             new UsernamePasswordAuthenticationToken(
-                    loginMember.getUniqueId(),
+                    AuthDto.builder()
+                            .uniqueId(loginMember.getUniqueId())
+                            .email(loginMember.getEmail())
+                            .build(),
                     null,
                     Collections.singletonList(new SimpleGrantedAuthority(loginMember.getRole())));
 

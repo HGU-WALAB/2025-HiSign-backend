@@ -81,13 +81,19 @@ public class DocumentService {
         return documentRepository.save(document);
     }
 
-    // getStorageLocation 메서드를 추가하여 documentStorageLocation 반환
     public Path getStorageLocation() {
         return documentStorageLocation;
     }
 
     public List<DocumentDTO> getDocumentsByUniqueId(String uniqueId) {
         List<Document> documents = documentRepository.findByMember_UniqueId(uniqueId);
+        return documents.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    public List<DocumentDTO> getDocumentsBySignerEmail(String email) {
+        List<Document> documents = documentRepository.findDocumentsBySignerEmail(email);
+
+        System.out.println("조회된 문서 개수: " + documents.size() + "개, 조회한 이메일: " + email);
 
         return documents.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
@@ -130,5 +136,6 @@ public class DocumentService {
         }
         return false;
     }
+
 
 }
