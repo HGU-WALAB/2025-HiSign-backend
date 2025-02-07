@@ -14,11 +14,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -93,18 +95,22 @@ public class DocumentController {
     }
 
     //서명용 문서 불러오기 (필터에서 예외처리 되어있음)
-    @GetMapping("sign/{id}")
-    public ResponseEntity<Resource> getDocumentForSigning(@PathVariable Long id) {
+    @GetMapping("/sign/{id}")
+    public ResponseEntity<Resource> getDocumentForSigning(@PathVariable Long id) throws UnsupportedEncodingException {
         Resource resource = documentService.loadFileAsResource(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 읽어올 수 없습니다."));
 
+        String encodedFileName = URLEncoder.encode(Objects.requireNonNull(resource.getFilename()), String.valueOf(StandardCharsets.UTF_8))
+                .replace("+", "%20"); // 공백 변환
+
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + resource.getFilename());
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName);
+        headers.add(HttpHeaders.CONTENT_TYPE, "application/pdf");
 
         return ResponseEntity.ok()
                 .headers(headers)
-                .header("Content-Type", "application/pdf")
                 .body(resource);
     }
+
 }
 

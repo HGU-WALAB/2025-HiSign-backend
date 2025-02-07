@@ -166,6 +166,7 @@ public class SignatureRequestController {
         // 5️⃣ 문서 ID 반환
         Map<String, Object> response = new HashMap<>();
         response.put("documentId", signatureRequest.getDocument().getId());
+        response.put("documentName", signatureRequest.getDocument().getFileName());
 
         return ResponseEntity.ok(response);
     }

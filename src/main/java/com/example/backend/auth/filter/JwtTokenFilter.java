@@ -34,10 +34,10 @@ public class JwtTokenFilter extends OncePerRequestFilter {
   private static Pattern buildExcludedPathPattern() {
     String[] excludedPaths = {
             "/api/auth/.*",
-            "/api/signature-requests/validate",
             "/api/signature-requests/check",
-            "api/signature/.*",
-            "api/documents/sign/.*",
+            "/api/signature-requests/validate",
+            "/api/signature/.*",
+            "/api/documents/sign/.*",
             "/swagger-ui/.*",
             "/v3/api-docs/.*",
             "/v3/api-docs",
