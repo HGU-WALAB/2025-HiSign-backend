@@ -2,6 +2,7 @@ package com.example.backend.signature.service;
 
 import com.example.backend.document.entity.Document;
 import com.example.backend.member.entity.Member;
+import com.example.backend.signature.DTO.SignatureDTO;
 import com.example.backend.signature.entity.Signature;
 import com.example.backend.signature.repository.SignatureRepository;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class SignatureService {
@@ -50,5 +52,12 @@ public class SignatureService {
                 .build();
 
         return signatureRepository.save(signature);
+    }
+
+    public List<SignatureDTO> getSignatureFields(Long documentId, String signerEmail) {
+        return signatureRepository.findByDocumentIdAndSignerEmail(documentId, signerEmail)
+                .stream()
+                .map(SignatureDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 }

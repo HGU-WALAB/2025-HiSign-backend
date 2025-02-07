@@ -12,12 +12,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -57,33 +61,25 @@ public class DocumentController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Resource> getDocument(@PathVariable Long id) {
-        Document document = documentService.getDocumentById(id);
+        Document document = documentService.getDocumentById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
 
-        if (document != null) {
-            String savedFileName = document.getSavedFileName();
-            Path path = Paths.get(documentService.getStorageLocation().toString(), savedFileName);
-            Resource file = new FileSystemResource(path.toString());
+        Resource resource = documentService.loadFileAsResource(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 읽어올 수 없습니다."));
 
-            if (file.exists()) {
-                try {
-                    String encodedFileName = URLEncoder.encode(file.getFilename(), StandardCharsets.UTF_8.toString())
-                            .replace("+", "%20");
+        try {
+            String encodedFileName = URLEncoder.encode(document.getFileName(), StandardCharsets.UTF_8.toString())
+                    .replace("+", "%20");
 
-                    HttpHeaders headers = new HttpHeaders();
-                    headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName);
 
-                    return ResponseEntity.ok()
-                            .headers(headers)
-                            .header("Content-Type", "application/pdf")
-                            .body(file);
-                } catch (Exception e) {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-                }
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .header("Content-Type", "application/pdf")
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
@@ -97,5 +93,24 @@ public class DocumentController {
                     .body("해당 문서를 찾을 수 없습니다.");
         }
     }
+
+    //서명용 문서 불러오기 (필터에서 예외처리 되어있음)
+    @GetMapping("/sign/{id}")
+    public ResponseEntity<Resource> getDocumentForSigning(@PathVariable Long id) throws UnsupportedEncodingException {
+        Resource resource = documentService.loadFileAsResource(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 읽어올 수 없습니다."));
+
+        String encodedFileName = URLEncoder.encode(Objects.requireNonNull(resource.getFilename()), String.valueOf(StandardCharsets.UTF_8))
+                .replace("+", "%20"); // 공백 변환
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName);
+        headers.add(HttpHeaders.CONTENT_TYPE, "application/pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(resource);
+    }
+
 }
 

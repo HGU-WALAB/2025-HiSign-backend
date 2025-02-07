@@ -30,8 +30,35 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
   private final String SECRET_KEY;
 
-  // 허용할 경로 목록 (CORS 예외 처리)
-  private static final Pattern EXCLUDED_PATH_PATTERN = Pattern.compile("^(/api/auth/.*|/hisign_1/api/auth/.*|/hisign_1/swagger-ui/.*|/hisign_1/v3/api-docs/.*|/hisign_1/v3/api-docs|/hisign_1/swagger-resources/.*|/hisign_1/webjars/.*|/hisign_1/swagger-ui.html)$");
+  // ✅ 가독성을 위한 정적 메서드로 예외 엔드포인트를 패턴화
+  private static Pattern buildExcludedPathPattern() {
+    String[] excludedPaths = {
+            "/api/auth/.*",
+            "/api/signature-requests/check",
+            "/api/signature-requests/validate",
+            "/api/signature/.*",
+            "/api/documents/sign/.*",
+            "/swagger-ui/.*",
+            "/v3/api-docs/.*",
+            "/v3/api-docs",
+            "/swagger-resources/.*",
+            "/webjars/.*",
+            "/swagger-ui.html",
+
+            //와랩 배포용
+//            "/hisign_1/api/auth/.*",
+//            "/hisign_1/swagger-ui/.*",
+//            "/hisign_1/v3/api-docs/.*",
+//            "/hisign_1/v3/api-docs",
+//            "/hisign_1/swagger-resources/.*",
+//            "/hisign_1/webjars/.*",
+//            "/hisign_1/swagger-ui.html"
+    };
+    return Pattern.compile("^(" + String.join("|", excludedPaths) + ")$");
+  }
+
+  // ✅ 정규식 패턴 적용
+  private static final Pattern EXCLUDED_PATH_PATTERN = buildExcludedPathPattern();
 
   @Override
   protected void doFilterInternal(
@@ -40,10 +67,10 @@ public class JwtTokenFilter extends OncePerRequestFilter {
           @NonNull FilterChain filterChain
   ) throws ServletException, IOException {
     String requestURI = request.getRequestURI();
-    System.out.println("Request URI: " + requestURI);
 
-    // 특정 경로는 필터링 제외
-    if (isExcludedPath(requestURI)) {
+    // ✅ 패턴화된 예외 엔드포인트 검사
+    if (EXCLUDED_PATH_PATTERN.matcher(requestURI).matches()) {
+      System.out.println("Request URI: " + requestURI);
       System.out.println("Excluding from JWT filter: " + requestURI);
       filterChain.doFilter(request, response);
       return;
@@ -77,11 +104,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     System.out.println("User authenticated successfully.");
     filterChain.doFilter(request, response);
-  }
-
-  // 특정 URL이 필터링 예외 대상인지 확인하는 메서드
-  private boolean isExcludedPath(String requestURI) {
-    return EXCLUDED_PATH_PATTERN.matcher(requestURI).matches();
   }
 
 }

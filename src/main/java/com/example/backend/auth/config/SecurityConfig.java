@@ -49,6 +49,10 @@ public class SecurityConfig {
             .authorizeRequests()
             .antMatchers(
                     "/api/auth/**",
+                    "/api/signature-requests/check",
+                    "/api/signature-requests/validate",
+                    "/api/signature/**",
+                    "/api/documents/sign/**",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
                     "/swagger-resources/**",

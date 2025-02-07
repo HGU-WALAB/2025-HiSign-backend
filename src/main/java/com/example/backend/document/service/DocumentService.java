@@ -10,6 +10,8 @@ import com.example.backend.signature.repository.SignatureRepository;
 import com.example.backend.signatureRequest.repository.SignatureRequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,8 +48,8 @@ public class DocumentService {
         this.signatureRepository = signatureRepository;
     }
 
-    public Document getDocumentById(Long documentId) {
-        return documentRepository.findById(documentId).orElse(null);
+    public Optional<Document> getDocumentById(Long documentId) {
+        return documentRepository.findById(documentId);
     }
 
     private DocumentDTO convertToDTO(Document document) {
@@ -135,5 +137,20 @@ public class DocumentService {
             return true;
         }
         return false;
+    }
+
+    // 🔹 문서를 조회하고 파일 리소스를 반환하는 메서드 (컨트롤러에서 ResponseEntity 생성)
+    public Optional<Resource> loadFileAsResource(Long documentId) {
+        Optional<Document> documentOpt = documentRepository.findById(documentId);
+
+        if (!documentOpt.isPresent()) {
+            return Optional.empty();
+        }
+
+        Document document = documentOpt.get();
+        Path filePath = documentStorageLocation.resolve(document.getSavedFileName()).normalize();
+        Resource resource = new FileSystemResource(filePath.toString());
+
+        return resource.exists() ? Optional.of(resource) : Optional.empty();
     }
 }
