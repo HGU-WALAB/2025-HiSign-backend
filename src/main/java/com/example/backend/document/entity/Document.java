@@ -22,6 +22,9 @@ public class Document {
     private Member member; // 업로드한 회원
 
     @Column(nullable = false, length = 255)
+    private String requestName;
+
+    @Column(nullable = false, length = 255)
     private String fileName;
 
     @Column(name = "saved_file_name", nullable = false)
@@ -33,7 +36,10 @@ public class Document {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(nullable = false)
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(nullable = false, columnDefinition = "TINYINT")
     private Integer status;
 
 }

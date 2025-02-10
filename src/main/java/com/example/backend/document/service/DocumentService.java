@@ -64,7 +64,7 @@ public class DocumentService {
                 .build();
     }
 
-    public Document saveDocument(MultipartFile file, String savedFileName, Member member) {
+    public Document saveDocument(String requestName,MultipartFile file, String savedFileName, Member member) {
 
         Optional<Member> existingMember = memberRepository.findByUniqueId(member.getUniqueId());
 
@@ -73,6 +73,7 @@ public class DocumentService {
 
         // Document 엔티티 생성 및 저장
         Document document = new Document();
+        document.setRequestName(requestName);
         document.setMember(member);
         document.setFileName(file.getOriginalFilename()); // 원래 파일 이름
         document.setSavedFileName(savedFileName); // 저장된 파일 이름
