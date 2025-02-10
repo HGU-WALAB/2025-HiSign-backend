@@ -31,7 +31,7 @@ public class Signature {
     private LocalDateTime signedAt;
 
     @Column(nullable = false)
-    private int type;
+    private Integer type;
 
     @Column(length = 255)
     private String image_data;

@@ -7,7 +7,6 @@ import com.example.backend.mail.service.MailService;
 import com.example.backend.signature.DTO.SignatureDTO;
 import com.example.backend.signature.repository.SignatureRepository;
 import com.example.backend.signature.service.SignatureService;
-import com.example.backend.signatureRequest.DTO.DocumentWithSignatureFieldsDTO;
 import com.example.backend.signatureRequest.DTO.SignatureRequestDTO;
 import com.example.backend.signatureRequest.DTO.SignerDTO;
 import com.example.backend.signatureRequest.controller.request.SignatureValidationRequest;
@@ -19,13 +18,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.security.Signature;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/signature-requests")
@@ -36,8 +33,6 @@ public class SignatureRequestController {
     private final SignatureRequestService signatureRequestService;
     private final MailService mailService;
     private final SignatureRequestRepository signatureRequestRepository;
-    private final DocumentRepository documentRepository;
-    private final SignatureRepository signatureRepository;
 
     public SignatureRequestController(DocumentService documentService,
                                       SignatureService signatureService,
@@ -51,8 +46,6 @@ public class SignatureRequestController {
         this.signatureRequestService = signatureRequestService;
         this.mailService = mailService;
         this.signatureRequestRepository = signatureRequestRepository;
-        this.documentRepository = documentRepository;
-        this.signatureRepository = signatureRepository;
     }
 
     @PostMapping("/request")
