@@ -29,23 +29,17 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final Path documentStorageLocation;
     private final MemberRepository memberRepository;
-    private final FileService fileService;
     private final SignatureRequestRepository signatureRequestRepository;
-    private final SignatureRepository signatureRepository;
 
     @Autowired
     public DocumentService( DocumentRepository documentRepository,
                             @Value("${file.document-dir}") String documentDir,
                             MemberRepository memberRepository,
-                            FileService fileService,
-                            SignatureRequestRepository signatureRequestRepository,
-                            SignatureRepository signatureRepository) {
+                            SignatureRequestRepository signatureRequestRepository) {
         this.documentRepository = documentRepository;
         this.documentStorageLocation = Paths.get(documentDir); // 파일 저장 경로
         this.memberRepository = memberRepository;
-        this.fileService = fileService;
         this.signatureRequestRepository = signatureRequestRepository;
-        this.signatureRepository = signatureRepository;
     }
 
     public Optional<Document> getDocumentById(Long documentId) {
@@ -123,17 +117,13 @@ public class DocumentService {
         if (documentOptional.isPresent()) {
             Document document = documentOptional.get();
 
-            // 관련 서명 테이블(Signature) 데이터 삭제
-            signatureRepository.deleteByDocumentId(documentId);
+            document.setStatus(5);
+            document.setDeletedAt(LocalDateTime.now());
 
-            // 서버에서 파일 삭제
-            fileService.deleteDocumentFile(documentStorageLocation.resolve(document.getSavedFileName()));
-
-            // 관련 서명 요청 삭제
-            signatureRequestRepository.deleteByDocumentId(documentId);
-
-            // 문서 삭제
-            documentRepository.delete(document);
+            // 문서 상태 삭제로 변경
+            documentRepository.save(document);
+            // 관련 서명 요청 삭제 상태로 변경
+            signatureRequestRepository.updateRequestStatusToDeleted(documentId);
 
             return true;
         }
