@@ -30,8 +30,8 @@ public class Signature {
     @Column(name = "signed_at")
     private LocalDateTime signedAt;
 
-    @Column(nullable = false)
-    private int type;
+    @Column(nullable = false, columnDefinition = "TINYINT")
+    private Integer type;
 
     @Column(length = 255)
     private String image_data;
@@ -39,7 +39,7 @@ public class Signature {
     @Column(length = 255)
     private String text_data;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TINYINT")
     private Integer status;
 
     @Column(name = "page_number", nullable = false)

@@ -41,8 +41,8 @@ public class SignatureRequest {
     @Column(name = "expired_at", nullable = false)
     private LocalDateTime expiredAt; // 요청 만료 시각
 
-    @Column(name = "status", nullable = false)
-    private int status; // 요청 상태 (0: 대기 중, 1: 완료, 2: 거절됨)
+    @Column(name = "status", nullable = false, columnDefinition = "TINYINT")
+    private Integer status; // 요청 상태 (0: 대기 중, 1: 완료, 2: 거절됨)
 
     @PrePersist
     protected void onCreate() {
