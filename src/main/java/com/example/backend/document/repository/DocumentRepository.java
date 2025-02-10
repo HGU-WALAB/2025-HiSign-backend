@@ -20,5 +20,6 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     @Transactional
     @Query("UPDATE Document d SET d.status = 2 WHERE d.id = :documentId")
     int updateDocumentStatusToRejected(@Param("documentId") Long documentId);
+
 }
 

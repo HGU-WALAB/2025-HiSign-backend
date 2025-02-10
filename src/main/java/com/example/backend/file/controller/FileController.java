@@ -40,7 +40,8 @@ public class FileController {
     @PostMapping("/document/upload")
     public ResponseEntity<Document> uploadFile(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("unique_id") String uniqueId
+            @RequestParam("unique_id") String uniqueId,
+            @RequestParam("request_name") String requestName
     ) {
         try {
             Member member = (Member) memberRepository.findByUniqueId(uniqueId)
@@ -49,7 +50,7 @@ public class FileController {
             // 1. 파일 저장
             String StoredFileName = fileService.storeFile(file.getBytes(), file.getOriginalFilename(), documentStorageLocation);
             // 2. 문서 정보 저장
-            Document document = documentService.saveDocument(file, StoredFileName, member);
+            Document document = documentService.saveDocument(requestName ,file, StoredFileName, member);
 
             return ResponseEntity.ok(document);
         } catch (IOException e) {

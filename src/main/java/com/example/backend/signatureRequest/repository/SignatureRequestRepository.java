@@ -24,5 +24,10 @@ public interface SignatureRequestRepository extends JpaRepository<SignatureReque
     @Query("UPDATE SignatureRequest s SET s.status = 2 WHERE s.document.id = :documentId")
     int updateRequestStatusToRejected(@Param("documentId") Long documentId);
 
+    @Modifying
+    @Transactional
+    @Query("UPDATE SignatureRequest s SET s.status = 5 WHERE s.document.id = :documentId")
+    int updateRequestStatusToDeleted(@Param("documentId") Long documentId);
+
     Optional<SignatureRequest> findByToken(String token);
 }
