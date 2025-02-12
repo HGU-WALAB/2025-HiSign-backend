@@ -5,6 +5,7 @@ import com.example.backend.member.repository.MemberRepository;
 import com.example.backend.signatureRequest.DTO.SignerDTO;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,8 +18,9 @@ public class MemberService {
         this.memberRepository = memberRepository;
     }
 
-    public Member findByEmail(String email) {
-        return (Member) memberRepository.findByEmail(email).orElse(null);
+    public Member findByUniqueId(String uniqueId) {
+        return (Member) memberRepository.findByUniqueId(uniqueId)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found with uniqueId: " + uniqueId));
     }
 
     public Member save(Member member) {

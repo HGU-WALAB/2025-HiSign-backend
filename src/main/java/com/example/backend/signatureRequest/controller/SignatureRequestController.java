@@ -15,6 +15,7 @@ import com.example.backend.signatureRequest.repository.SignatureRequestRepositor
 import com.example.backend.signatureRequest.service.SignatureRequestService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailSendException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -38,9 +39,7 @@ public class SignatureRequestController {
                                       SignatureService signatureService,
                                       SignatureRequestService signatureRequestService,
                                       MailService mailService,
-                                      SignatureRequestRepository signatureRequestRepository,
-                                      DocumentRepository documentRepository,
-                                      SignatureRepository signatureRepository) {
+                                      SignatureRequestRepository signatureRequestRepository) {
         this.documentService = documentService;
         this.signatureService = signatureService;
         this.signatureRequestService = signatureRequestService;
@@ -54,6 +53,7 @@ public class SignatureRequestController {
         Document document = documentService.getDocumentById(requestDto.getDocumentId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
 
+        try {
         // 2. 서명 요청 생성 및 저장
         List<SignatureRequest> requests = signatureRequestService.createSignatureRequests(document, requestDto.getSigners());
 
@@ -74,9 +74,18 @@ public class SignatureRequestController {
         }
 
         //5. 메일 전송
-        mailService.sendSignatureRequestEmails(requests);
+        mailService.sendSignatureRequestEmails(requestDto.getMemberName(), document.getRequestName(),requests);
 
         return ResponseEntity.ok("서명 요청이 성공적으로 생성되었습니다.");
+        } catch (MailSendException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "이메일 전송에 실패했습니다. 이메일 주소를 확인하세요.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse.toString());
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "서명 요청 처리 중 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse.toString());
+        }
     }
 
     @PutMapping("/cancel/{documentId}")
