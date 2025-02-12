@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = {"http://localhost:3000", "https://ta-project-front-w5up.vercel.app/"})
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -20,6 +19,7 @@ public class AuthController {
 
   @PostMapping("/login")
   public ResponseEntity<LoginResponse> Login(@RequestBody LoginRequest request) {
+
     LoginResponse ls = LoginResponse.from(authService.login(hisnetLoginService.callHisnetLoginApi(AuthDto.from(request))));
     return ResponseEntity.ok(ls);
   }
