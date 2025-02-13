@@ -38,6 +38,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             "/api/signature-requests/validate",
             "/api/signature/.*",
             "/api/documents/sign/.*",
+            "/api/files/signature/upload",
             "/swagger-ui/.*",
             "/v3/api-docs/.*",
             "/v3/api-docs",

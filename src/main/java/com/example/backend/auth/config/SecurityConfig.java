@@ -53,6 +53,7 @@ public class SecurityConfig {
                     "/api/signature-requests/validate",
                     "/api/signature/**",
                     "/api/documents/sign/**",
+                    "/api/files/signature/upload",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
                     "/swagger-resources/**",

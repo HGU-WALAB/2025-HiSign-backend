@@ -4,24 +4,26 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
 public class FileService {
 
     private final Path signatureStorageLocation;
-    private final Path fileStorageLocation;
+    private final Path documentStorageLocation;
+    private final Path signedDocumentStorageLocation;
 
     public FileService(@Value("${file.signature-dir}") String signatureDir,
-                       @Value("${file.document-dir}") String documentDir) {
+                       @Value("${file.document-dir}") String documentDir,
+                       @Value("${file.signed-document-dir}") String signedDocumentDir) {
         this.signatureStorageLocation = this.createDirectory(signatureDir);
-        this.fileStorageLocation = this.createDirectory(documentDir);
+        this.documentStorageLocation = this.createDirectory(documentDir);
+        this.signedDocumentStorageLocation = this.createDirectory(signedDocumentDir);
     }
 
     public Path createDirectory(String dir) {
@@ -36,24 +38,30 @@ public class FileService {
         return directory;
     }
 
-    public String storeFile(byte[] fileData, String fileName, String fileType) {
+    public String storeFile(MultipartFile file, String fileType) {
         try {
-            // 고유 파일 이름 생성
-            String uniqueFileName = generateUniqueFileName(fileName);
+            // 고유한 파일 이름 생성
+            String uniqueFileName = generateUniqueFileName(Objects.requireNonNull(file.getOriginalFilename()));
+
+            // 저장할 경로 설정
             Path targetLocation;
-            if(fileType.equalsIgnoreCase("SIGNATURE")) {
+            if ("DOCUMENT".equalsIgnoreCase(fileType)) {
+                targetLocation = documentStorageLocation.resolve(uniqueFileName);
+            } else if ("SIGNATURE".equalsIgnoreCase(fileType)) {
                 targetLocation = signatureStorageLocation.resolve(uniqueFileName);
-            } else if (fileType.equalsIgnoreCase("DOCUMENT")) {
-                targetLocation = fileStorageLocation.resolve(uniqueFileName);
             } else {
-                throw new RuntimeException("파일 저장 타입 오류:" + fileType);
+                throw new RuntimeException("파일 저장 타입 오류: " + fileType);
             }
-            Files.write(targetLocation, fileData);
-            return uniqueFileName;
+
+            // 파일 저장
+            file.transferTo(targetLocation.toFile());
+
+            return uniqueFileName; // 저장된 파일 경로 반환
         } catch (IOException e) {
-            throw new RuntimeException("파일 저장 중 오류 발생: " + fileName, e);
+            throw new RuntimeException("파일 저장 중 오류 발생: " + file.getOriginalFilename(), e);
         }
     }
+
 
     public byte[] readFile(String fileName, Path storageLocation) {
         try {
@@ -64,7 +72,7 @@ public class FileService {
         }
     }
 
-    public void deleteDocumentFile(Path filePath) {
+    public void deleteFile(Path filePath) {
         try {
             Files.deleteIfExists(filePath);
         } catch (IOException e) {
@@ -72,11 +80,25 @@ public class FileService {
         }
     }
 
+
     private String generateUniqueFileName(String originalFileName) {
         String onlyFileName = originalFileName.substring(0, originalFileName.lastIndexOf("."));
         String uniqueFileName = onlyFileName + UUID.randomUUID().toString();
         String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
 
         return uniqueFileName + extension;
+    }
+
+    // ✅ 파일 저장 경로 반환
+    public Path getSignatureFilePath(String fileName) {
+        return signatureStorageLocation.resolve(fileName);
+    }
+
+    public Path getDocumentFilePath(String fileName) {
+        return documentStorageLocation.resolve(fileName);
+    }
+
+    public Path getSignedDocumentFilePath(String fileName) {
+        return signedDocumentStorageLocation.resolve(fileName);
     }
 }

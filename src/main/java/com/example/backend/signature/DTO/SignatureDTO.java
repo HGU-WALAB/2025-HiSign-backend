@@ -16,7 +16,7 @@ public class SignatureDTO {
     private float width;  // 서명 박스 너비
     private float height; // 서명 박스 높이
     private SignaturePositionDTO position;  // 서명 위치
-    private String imagePath;
+    private String imageName;
     private String textData;
 
     // 🔹 `Signature` 엔티티를 `SignatureDTO`로 변환하는 정적 메서드 추가
@@ -31,8 +31,8 @@ public class SignatureDTO {
                         signature.getX(),
                         signature.getY()
                 ),
-                signature.getImage_data(),
-                signature.getText_data()
+                signature.getImageName(),
+                signature.getTextData()
         );
     }
 }
