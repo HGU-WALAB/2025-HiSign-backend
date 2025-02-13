@@ -34,10 +34,10 @@ public class Signature {
     private Integer type;
 
     @Column(length = 255)
-    private String image_data;
+    private String imageName;
 
     @Column(length = 255)
-    private String text_data;
+    private String textData;
 
     @Column(nullable = false, columnDefinition = "TINYINT")
     private Integer status;
@@ -58,4 +58,5 @@ public class Signature {
     private Float height;
 
     private String description;
+
 }

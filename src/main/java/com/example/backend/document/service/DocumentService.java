@@ -8,13 +8,16 @@ import com.example.backend.member.entity.Member;
 import com.example.backend.member.repository.MemberRepository;
 import com.example.backend.signature.repository.SignatureRepository;
 import com.example.backend.signatureRequest.repository.SignatureRequestRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,23 +27,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class DocumentService {
 
+    private final FileService fileService;
     private final DocumentRepository documentRepository;
-    private final Path documentStorageLocation;
     private final MemberRepository memberRepository;
     private final SignatureRequestRepository signatureRequestRepository;
-
-    @Autowired
-    public DocumentService( DocumentRepository documentRepository,
-                            @Value("${file.document-dir}") String documentDir,
-                            MemberRepository memberRepository,
-                            SignatureRequestRepository signatureRequestRepository) {
-        this.documentRepository = documentRepository;
-        this.documentStorageLocation = Paths.get(documentDir); // 파일 저장 경로
-        this.memberRepository = memberRepository;
-        this.signatureRequestRepository = signatureRequestRepository;
-    }
 
     public Optional<Document> getDocumentById(Long documentId) {
         return documentRepository.findById(documentId);
@@ -76,10 +69,6 @@ public class DocumentService {
         document.setUpdatedAt(LocalDateTime.now());
 
         return documentRepository.save(document);
-    }
-
-    public Path getStorageLocation() {
-        return documentStorageLocation;
     }
 
     public List<DocumentDTO> getDocumentsByUniqueId(String uniqueId) {
@@ -139,9 +128,15 @@ public class DocumentService {
         }
 
         Document document = documentOpt.get();
-        Path filePath = documentStorageLocation.resolve(document.getSavedFileName()).normalize();
+        Path filePath = fileService.getDocumentFilePath(document.getSavedFileName()).normalize();
         Resource resource = new FileSystemResource(filePath.toString());
 
         return resource.exists() ? Optional.of(resource) : Optional.empty();
+    }
+
+    public String getOriginalFileName(Long documentId) {
+        return documentRepository.findById(documentId)
+                .map(Document::getFileName)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
     }
 }

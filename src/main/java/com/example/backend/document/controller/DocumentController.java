@@ -100,7 +100,9 @@ public class DocumentController {
         Resource resource = documentService.loadFileAsResource(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 읽어올 수 없습니다."));
 
-        String encodedFileName = URLEncoder.encode(Objects.requireNonNull(resource.getFilename()), String.valueOf(StandardCharsets.UTF_8))
+        // 문서의 원본 파일명 조회
+        String originalFileName = documentService.getOriginalFileName(id);
+        String encodedFileName = URLEncoder.encode(Objects.requireNonNull(originalFileName), String.valueOf(StandardCharsets.UTF_8))
                 .replace("+", "%20"); // 공백 변환
 
         HttpHeaders headers = new HttpHeaders();
