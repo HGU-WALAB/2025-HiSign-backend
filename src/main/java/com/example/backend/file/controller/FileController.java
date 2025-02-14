@@ -67,7 +67,7 @@ public class FileController {
         // 🔹 서명 이미지 저장
         String fileName = fileService.storeFile(file, "SIGNATURE");
 
-        return ResponseEntity.ok(Collections.singletonMap("filePath", fileName));
+        return ResponseEntity.ok(Collections.singletonMap("fileName", fileName));
     }
 
 
