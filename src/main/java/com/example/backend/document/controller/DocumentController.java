@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -112,6 +113,18 @@ public class DocumentController {
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(resource);
+    }
+
+    @GetMapping("/received-with-requester")
+    public List<Map<String, Object>> getReceivedDocumentsWithRequester() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String email = (principal instanceof AuthDto) ? ((AuthDto) principal).getEmail() : null;
+
+        if (email == null) {
+            throw new IllegalStateException("사용자의 이메일을 찾을 수 없습니다.");
+        }
+
+        return documentService.getDocumentsWithRequesterInfoBySignerEmail(email);
     }
 
 }
