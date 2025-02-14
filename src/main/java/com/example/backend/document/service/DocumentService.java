@@ -64,6 +64,7 @@ public class DocumentService {
         document.setFileName(file.getOriginalFilename()); // 원래 파일 이름
         document.setSavedFileName(savedFileName); // 저장된 파일 이름
         document.setStatus(0); // 초기 상태 설정
+        document.setIsCanceled(1); //0: 취소 불가능 , 1:이 가능 // 취소 가부
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
         return documentRepository.save(document);
