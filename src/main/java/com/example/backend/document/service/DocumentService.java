@@ -22,7 +22,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -82,6 +84,22 @@ public class DocumentService {
         System.out.println("조회된 문서 개수: " + documents.size() + "개, 조회한 이메일: " + email);
 
         return documents.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    public List<Map<String, Object>> getDocumentsWithRequesterInfoBySignerEmail(String email) {
+        List<Document> documents = documentRepository.findDocumentsBySignerEmail(email);
+
+        System.out.println("조회된 문서 개수: " + documents.size() + "개, 조회한 이메일: " + email);
+
+        return documents.stream().map(doc -> {
+            Map<String, Object> documentMap = new HashMap<>();
+            documentMap.put("id", doc.getId());
+            documentMap.put("fileName", doc.getFileName());
+            documentMap.put("createdAt", doc.getCreatedAt());
+            documentMap.put("status", doc.getStatus());
+            documentMap.put("requesterName", doc.getMember().getName()); // 요청자 이름 추가
+            return documentMap;
+        }).collect(Collectors.toList());
     }
 
     @Transactional
