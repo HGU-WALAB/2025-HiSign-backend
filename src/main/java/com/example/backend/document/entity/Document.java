@@ -42,5 +42,11 @@ public class Document {
     @Column(nullable = false, columnDefinition = "TINYINT")
     private Integer status;
 
+    @Column(length = 255, nullable = true)
+    private String cancel_reason;
+
+    @Column(nullable = false, columnDefinition = "TINYINT")
+    private Integer isCanceled;
+
 }
 

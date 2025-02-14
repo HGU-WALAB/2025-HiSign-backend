@@ -48,18 +48,6 @@ public class DocumentController {
         return documentService.getDocumentsByUniqueId(uniqueId);
     }
 
-    @GetMapping("/received-documents")
-    public List<DocumentDTO> getReceivedDocuments() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        String email = (principal instanceof AuthDto) ? ((AuthDto)principal).getEmail()  : null;
-        if (email == null) {
-            throw new IllegalStateException("사용자의 이메일을 찾을 수 없습니다.");
-        }
-
-        return documentService.getDocumentsBySignerEmail(email);
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<Resource> getDocument(@PathVariable Long id) {
         Document document = documentService.getDocumentById(id)
@@ -118,11 +106,14 @@ public class DocumentController {
     @GetMapping("/received-with-requester")
     public List<Map<String, Object>> getReceivedDocumentsWithRequester() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String email = (principal instanceof AuthDto) ? ((AuthDto) principal).getEmail() : null;
 
-        if (email == null) {
-            throw new IllegalStateException("사용자의 이메일을 찾을 수 없습니다.");
+        if (!(principal instanceof AuthDto)) {
+            throw new IllegalStateException("사용자의 이메일 정보를 찾을 수 없습니다.");
         }
+
+        String email = ((AuthDto) principal).getEmail();
+
+        System.out.println("[DEBUG] 요청받은 문서 리스트 요청 - 이메일: " + email);
 
         return documentService.getDocumentsWithRequesterInfoBySignerEmail(email);
     }

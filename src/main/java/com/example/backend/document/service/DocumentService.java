@@ -22,10 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -69,7 +66,6 @@ public class DocumentService {
         document.setStatus(0); // 초기 상태 설정
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
-
         return documentRepository.save(document);
     }
 
@@ -78,29 +74,35 @@ public class DocumentService {
         return documents.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
-    public List<DocumentDTO> getDocumentsBySignerEmail(String email) {
-        List<Document> documents = documentRepository.findDocumentsBySignerEmail(email);
-
-        System.out.println("조회된 문서 개수: " + documents.size() + "개, 조회한 이메일: " + email);
-
-        return documents.stream().map(this::convertToDTO).collect(Collectors.toList());
-    }
 
     public List<Map<String, Object>> getDocumentsWithRequesterInfoBySignerEmail(String email) {
-        List<Document> documents = documentRepository.findDocumentsBySignerEmail(email);
+        List<Object[]> results = documentRepository.findDocumentsBySignerEmailWithRequester(email);
 
-        System.out.println("조회된 문서 개수: " + documents.size() + "개, 조회한 이메일: " + email);
+        if (results == null || results.isEmpty()) {
+            System.out.println("[ERROR] 문서 데이터가 존재하지 않음. email: " + email);
+            return new ArrayList<>(); // 빈 리스트 반환 (오류 방지)
+        }
 
-        return documents.stream().map(doc -> {
-            Map<String, Object> documentMap = new HashMap<>();
-            documentMap.put("id", doc.getId());
-            documentMap.put("fileName", doc.getFileName());
-            documentMap.put("createdAt", doc.getCreatedAt());
-            documentMap.put("status", doc.getStatus());
-            documentMap.put("requesterName", doc.getMember().getName()); // 요청자 이름 추가
-            return documentMap;
-        }).collect(Collectors.toList());
+        List<Map<String, Object>> documents = new ArrayList<>();
+
+        for (Object[] result : results) {
+            try {
+                Map<String, Object> docMap = new HashMap<>();
+                docMap.put("id", result[0]);          // document.id
+                docMap.put("fileName", result[1]);    // document.fileName
+                docMap.put("createdAt", result[2]);   // document.createdAt
+                docMap.put("status", result[3]);      // document.status
+                docMap.put("requesterName", result[4] != null ? result[4] : "알 수 없음"); // 요청자 이름
+
+                documents.add(docMap);
+            } catch (Exception e) {
+                System.out.println("[ERROR] 문서 데이터 매핑 중 오류 발생: " + e.getMessage());
+            }
+        }
+        return documents;
     }
+
+
 
     @Transactional
     public boolean cancelRequest(Long documentId) {
