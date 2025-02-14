@@ -46,20 +46,6 @@ public class SignatureService {
         signatureRepository.save(signature);
     }
 
-    public Signature saveSignature(Document document, Member signer, int type, String imageData, String textData) {
-        Signature signature = Signature.builder()
-                .document(document)
-                .signerEmail(signer.getEmail())
-                .signedAt(LocalDateTime.now())
-                .type(type)
-                .imageName(imageData)
-                .textData(textData)
-                .status(1)  // 완료 상태 설정
-                .build();
-
-        return signatureRepository.save(signature);
-    }
-
     public List<SignatureDTO> getSignatureFields(Long documentId, String signerEmail) {
         return signatureRepository.findByDocumentIdAndSignerEmail(documentId, signerEmail)
                 .stream()
