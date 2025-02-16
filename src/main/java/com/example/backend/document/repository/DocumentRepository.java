@@ -16,12 +16,13 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     @Query("SELECT d FROM Document d JOIN SignatureRequest s ON d.id = s.document.id WHERE s.signerEmail = :email")
     List<Document> findDocumentsBySignerEmail(@Param("email") String email);
 
-    @Query("SELECT d.id, d.fileName, d.createdAt, d.status, m.name " +
+    @Query("SELECT d.id, d.fileName, d.createdAt, d.status, m.name, d.requestName " +
             "FROM Document d " +
             "JOIN d.member m " +
             "JOIN SignatureRequest s ON d.id = s.document.id " +
             "WHERE s.signerEmail = :email")
     List<Object[]> findDocumentsBySignerEmailWithRequester(@Param("email") String email);
+
 
 
     @Modifying

@@ -42,6 +42,7 @@ public class DocumentService {
         return DocumentDTO.builder()
                 .id(document.getId())
                 .fileName(document.getFileName())
+                .requestName(document.getRequestName())
                 .memberId(document.getMember().getId())
                 .savedFileName(document.getSavedFileName())
                 .createdAt(document.getCreatedAt())
@@ -94,6 +95,7 @@ public class DocumentService {
                 docMap.put("createdAt", result[2]);   // document.createdAt
                 docMap.put("status", result[3]);      // document.status
                 docMap.put("requesterName", result[4] != null ? result[4] : "알 수 없음"); // 요청자 이름
+                docMap.put("requestName", result[5] != null ? result[5] : "작업명 없음");
 
                 documents.add(docMap);
             } catch (Exception e) {
