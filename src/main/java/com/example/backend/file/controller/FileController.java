@@ -34,7 +34,9 @@ public class FileController {
     public ResponseEntity<?> uploadDocumentFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam("unique_id") String uniqueId,
-            @RequestParam("request_name") String requestName
+            @RequestParam("request_name") String requestName,
+            @RequestParam("is_rejectable") Integer isRejectable,
+            @RequestParam("description") String description
     ) {
         try {
             // 🔹 1. 유저 조회 (유효성 검사)
@@ -47,7 +49,7 @@ public class FileController {
             String storedFileName = fileService.storeFile(file, "DOCUMENT");
 
             // 🔹 3. 문서 정보 저장 (파일 저장이 성공한 경우만)
-            Document document = documentService.saveDocument(requestName, file, storedFileName, member);
+            Document document = documentService.saveDocument(requestName, file, storedFileName, member,isRejectable, description);
 
             return ResponseEntity.ok(Collections.singletonMap("documentId", document.getId()));
 

@@ -15,6 +15,8 @@ public class DocumentDTO {
     private String fileName;
     private String savedFileName;
     private String requestName;
+    private Integer isRejectable;
+    private String description;
 
     // 날짜 포맷 설정
     @JsonFormat(pattern = "yyyy.MM.dd HH:mm")

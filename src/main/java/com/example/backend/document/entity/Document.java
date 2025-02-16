@@ -46,7 +46,10 @@ public class Document {
     private String cancel_reason;
 
     @Column(nullable = false, columnDefinition = "TINYINT")
-    private Integer isCanceled;
+    private Integer isRejectable; //0: 거절 불가능 , 1: 거절 가능
+
+    @Column(length = 255)
+    private String description;
 
 }
 
