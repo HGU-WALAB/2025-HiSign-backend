@@ -145,7 +145,6 @@ public class DocumentService {
         return false;
     }
 
-    // 🔹 문서를 조회하고 파일 리소스를 반환하는 메서드 (컨트롤러에서 ResponseEntity 생성)
     public Optional<Resource> loadFileAsResource(Long documentId) {
         Optional<Document> documentOpt = documentRepository.findById(documentId);
 

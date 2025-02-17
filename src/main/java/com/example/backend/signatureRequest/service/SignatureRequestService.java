@@ -44,31 +44,51 @@ public class SignatureRequestService {
     }
 
     @Transactional
-    public int cancelSignatureRequestsByDocumentId(Long documentId) {
+    public boolean cancelSignatureRequest(Long documentId, String reason) {
         List<SignatureRequest> requests = signatureRequestRepository.findByDocumentId(documentId);
 
         if (requests.isEmpty()) {
-            return 0;
+            return false;
         }
 
-        requests.forEach(request -> request.setStatus(3)); // 3: 요청자 취소
+        requests.forEach(request -> request.setStatus(3));
         signatureRequestRepository.saveAll(requests);
 
-        return requests.size();
-    }
-
-    @Transactional
-    public int rejectSignatureRequestsByDocumentId(Long documentId) {
-        int updatedRequestRows = signatureRequestRepository.updateRequestStatusToRejected(documentId);
-        int updatedDocumentRows = documentRepository.updateDocumentStatusToRejected(documentId);
-
-        System.out.println("[업데이트 완료] 서명 요청: " + updatedRequestRows + "개, 문서: " + updatedDocumentRows + "개 변경됨 (document_id=" + documentId + ")");
-
-        if (updatedRequestRows == 0 || updatedDocumentRows == 0) {
-            System.out.println("[실패] 거절할 서명 요청 또는 문서를 찾을 수 없음 - document_id=" + documentId);
-            return 0;
+        Optional<Document> documentOptional = documentRepository.findById(documentId);
+        if (documentOptional.isPresent()) {
+            Document document = documentOptional.get();
+            document.setStatus(3);
+            document.setCancelReason(reason);
+            documentRepository.save(document);
         }
 
-        return updatedRequestRows;
+        return true;
     }
+
+
+    @Transactional
+    public boolean rejectSignatureRequest(Long documentId, String reason) {
+        List<SignatureRequest> requests = signatureRequestRepository.findByDocumentId(documentId);
+
+        if (requests.isEmpty()) {
+            return false;
+        }
+
+        requests.forEach(request -> {
+            request.setStatus(2);
+            request.setRejectReason(reason);
+        });
+
+        signatureRequestRepository.saveAll(requests);
+
+        Optional<Document> documentOptional = documentRepository.findById(documentId);
+        if (documentOptional.isPresent()) {
+            Document document = documentOptional.get();
+            document.setStatus(2);
+            documentRepository.save(document);
+        }
+
+        return true;
+    }
+
 }

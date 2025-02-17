@@ -44,6 +44,9 @@ public class SignatureRequest {
     @Column(name = "status", nullable = false, columnDefinition = "TINYINT")
     private Integer status; // 요청 상태 (0: 대기 중, 1: 완료, 2: 거절됨)
 
+    @Column(length = 255, nullable = true)
+    private String rejectReason;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

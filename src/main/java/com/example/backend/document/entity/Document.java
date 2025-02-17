@@ -43,7 +43,7 @@ public class Document {
     private Integer status;
 
     @Column(length = 255, nullable = true)
-    private String cancel_reason;
+    private String cancelReason;
 
     @Column(nullable = false, columnDefinition = "TINYINT")
     private Integer isRejectable; //0: 거절 불가능 , 1: 거절 가능

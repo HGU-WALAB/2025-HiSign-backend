@@ -89,37 +89,41 @@ public class SignatureRequestController {
     }
 
     @PutMapping("/cancel/{documentId}")
-    public ResponseEntity<String> cancelSignatureRequests(@PathVariable Long documentId) {
-        System.out.println("API 호출됨: /cancel/" + documentId);
+    public ResponseEntity<String> cancelSignatureRequests(@PathVariable Long documentId,
+                                                          @RequestBody Map<String, String> requestBody) {
+        String reason = requestBody.get("reason");
 
-        boolean isCancelled = documentService.cancelRequest(documentId);
-        int cancelledCount = signatureRequestService.cancelSignatureRequestsByDocumentId(documentId);
+        if (reason == null || reason.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("취소 사유가 필요합니다.");
+        }
 
-        if (cancelledCount > 0 && isCancelled) {
-            System.out.println("서명 요청 취소됨: " + cancelledCount + "개, documentId: " + documentId);
-            return ResponseEntity.ok("총 " + cancelledCount + "개의 서명 요청이 취소되었습니다.");
+        boolean isCancelled = signatureRequestService.cancelSignatureRequest(documentId, reason);
+
+        if (isCancelled) {
+            return ResponseEntity.ok("서명 요청이 취소되었습니다.");
         } else {
-            System.out.println("취소할 서명 요청을 찾을 수 없음: documentId=" + documentId);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("해당 문서에 대한 서명 요청을 찾을 수 없습니다.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 문서를 찾을 수 없습니다.");
         }
     }
 
     @PutMapping("/reject/{documentId}")
-    public ResponseEntity<String> rejectSignatureRequestsByDocument(@PathVariable Long documentId) {
-        System.out.println("[API 호출] 요청 거절 - 문서 ID: " + documentId);
+    public ResponseEntity<String> rejectSignatureRequest(@PathVariable Long documentId,
+                                                         @RequestBody Map<String, String> requestBody) {
+        String reason = requestBody.get("reason");
 
-        int rejectedCount = signatureRequestService.rejectSignatureRequestsByDocumentId(documentId);
+        if (reason == null || reason.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("거절 사유가 필요합니다.");
+        }
 
-        if (rejectedCount > 0) {
-            System.out.println("[성공] 서명 요청 거절됨: " + rejectedCount + "개 (document_id=" + documentId + ")");
-            return ResponseEntity.ok("총 " + rejectedCount + "개의 서명 요청이 거절되었습니다.");
+        boolean isRejected = signatureRequestService.rejectSignatureRequest(documentId, reason);
+
+        if (isRejected) {
+            return ResponseEntity.ok("요청이 거절되었습니다.");
         } else {
-            System.out.println("[실패] 거절할 서명 요청을 찾을 수 없음 - document_id=" + documentId);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("해당 문서에 대한 서명 요청을 찾을 수 없습니다.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 문서를 찾을 수 없습니다.");
         }
     }
+
 
     @GetMapping("/check")
     public ResponseEntity<?> checkSignatureRequestToken(@RequestParam String token) {
