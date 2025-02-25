@@ -16,6 +16,7 @@ import com.example.backend.signatureRequest.service.SignatureRequestService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailSendException;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -130,19 +131,19 @@ public class SignatureRequestController {
         System.out.println("checkSignatureRequestToken: " + token);
         Optional<SignatureRequest> signatureRequestOpt = signatureRequestRepository.findByToken(token);
 
-        // 1️⃣ 토큰이 존재하지 않는 경우
+        // 1️⃣ 토큰이 존재하지 않는 경우 (404)
         if (!signatureRequestOpt.isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("잘못된 서명 요청입니다.");
         }
 
         SignatureRequest signatureRequest = signatureRequestOpt.get();
 
-        // 2️⃣ 요청 만료 시간 확인
+        // 2️⃣ 요청 만료 시간 확인 (401)
         if (signatureRequest.getExpiredAt().isBefore(LocalDateTime.now())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("서명 요청이 만료되었습니다.");
         }
 
-        // 3️⃣ 서명 요청 상태 확인 (대기 중(0)이 아닐 경우 차단)
+        // 3️⃣ 서명 요청 상태 확인 (403)
         if (signatureRequest.getStatus() != 0) { // 0 = 대기 중
             Map<String, Object> response = new HashMap<>();
             response.put("message", "서명 요청을 진행할 수 없는 상태입니다.");
@@ -154,8 +155,6 @@ public class SignatureRequestController {
         // 4️⃣ 토큰이 유효하고 서명 요청이 대기 중이며 만료되지 않았다면 200 OK 반환
         return ResponseEntity.ok("유효한 서명 요청입니다.");
     }
-
-
 
     @PostMapping("/validate")
     public ResponseEntity<?> validateSignatureRequest(@RequestBody SignatureValidationRequest request) {

@@ -72,13 +72,26 @@ public class FileService {
         }
     }
 
-    public void deleteFile(Path filePath) {
+    public void deleteFile(String fileName, String fileType) {
         try {
+            // 파일 삭제할 경로 설정
+            Path filePath;
+            if ("DOCUMENT".equalsIgnoreCase(fileType)) {
+                filePath = documentStorageLocation.resolve(fileName);
+            } else if ("SIGNATURE".equalsIgnoreCase(fileType)) {
+                filePath = signatureStorageLocation.resolve(fileName);
+            } else {
+                throw new RuntimeException("파일 삭제 타입 오류: " + fileType);
+            }
+
+            // 파일 삭제
             Files.deleteIfExists(filePath);
+            System.out.println("❌ 파일 삭제 성공: " + filePath);
         } catch (IOException e) {
-            throw new RuntimeException("파일 삭제 중 오류 발생: " + filePath, e);
+            throw new RuntimeException("파일 삭제 중 오류 발생: " + fileType + " - " + fileName, e);
         }
     }
+
 
 
     private String generateUniqueFileName(String originalFileName) {

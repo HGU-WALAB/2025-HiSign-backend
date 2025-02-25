@@ -4,7 +4,6 @@ import com.example.backend.signature.DTO.SignatureDTO;
 import com.example.backend.signature.controller.request.SignatureFieldRequest;
 import com.example.backend.signature.service.SignatureService;
 import com.example.backend.signatureRequest.DTO.SignerDTO;
-import com.example.backend.pdf.service.PdfService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +18,6 @@ import java.util.List;
 public class SignatureController {
 
     private final SignatureService signatureService;
-    private final PdfService pdfService;
 
     // 🔹 서명 요청에 연결된 서명 필드 조회
     // 🔹 특정 문서에서 특정 서명자의 서명 필드 조회
@@ -40,8 +38,6 @@ public class SignatureController {
             @RequestBody SignerDTO signerDTO) throws IOException {
 
         signatureService.saveSignatures(signerDTO, documentId);
-
-        pdfService.signDocument(documentId,signerDTO.getSignatureFields());
 
         return ResponseEntity.ok("서명 정보가 성공적으로 저장되었습니다.");
     }
