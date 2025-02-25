@@ -30,4 +30,6 @@ public interface SignatureRequestRepository extends JpaRepository<SignatureReque
     int updateRequestStatusToDeleted(@Param("documentId") Long documentId);
 
     Optional<SignatureRequest> findByToken(String token);
+
+    List<SignatureRequest> findByDocumentIdAndSignerEmail(Long documentId, String signerEmail);
 }

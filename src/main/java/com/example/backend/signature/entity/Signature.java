@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "signature")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
