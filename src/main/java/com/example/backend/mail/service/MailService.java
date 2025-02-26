@@ -55,20 +55,22 @@ public class MailService {
                     + "<p style='font-size:16px; color:#333;'><b>" + from + "</b>님으로부터 <b>'" + documentName + "'</b> 문서의 서명 요청이 도착하였습니다.</p>"
                     + "<p style='font-size:16px; color:#333;'>아래 링크를 클릭하여 서명을 진행해 주세요:</p>"
 
-                    // ✅ 작업 설명 추가 (컨테이너 안에 강조)
-                    + "<div style='background-color:#eef6ff; padding:15px; border-radius:5px; border-left:5px solid #0366d6; margin:15px 0; '>"
+                    // 요청사항 강조 컨테이너
+                    + "<div style='background-color:#eef6ff; padding:15px; border-radius:5px; border-left:5px solid #0366d6; margin:15px 0;'>"
                     + "<p style='font-size:16px; font-weight:bold; color:#0366d6;'>📌 요청사항:</p>"
                     + "<p style='font-size:16px; color:#333; text-align:center; font-style:italic; font-weight:bold; border:1px solid #0366d6; padding:10px; background-color:#ffffff; display:inline-block;'>"
                     + "\"" + description + "\""
                     + "</p>"
                     + "</div>"
 
+                    // 서명 버튼
                     + "<div style='text-align:center; margin:20px 0;'>"
                     + "<a href='" + signatureUrl + "' style='background-color:#0366d6; color:#ffffff; text-decoration:none; padding:12px 20px; border-radius:5px; font-size:18px; display:inline-block;'>서명하기</a>"
                     + "</div>"
+
+                    // 하단 안내 문구
                     + "<p style='font-size:14px; color:#666; text-align:center;'>※ 본 메일은 자동 발송되었으며, 회신이 불가능합니다.</p>"
-                    + "</div>"
-                    + "</div>";
+                    + "</div></div>";
 
             helper.setText(emailContent, true); // HTML 템플릿 적용
             mailSender.send(message);
@@ -91,7 +93,7 @@ public class MailService {
                     + "<div style='max-width:600px; background-color:#ffffff; border-radius:10px; padding:20px; margin:auto; box-shadow:0px 4px 10px rgba(0,0,0,0.1);'>"
                     + "<h2 style='color:#0366d6; text-align:center;'>HISign 서명 완료 안내</h2>"
                     + "<p style='font-size:16px; color:#333;'>안녕하세요, 사랑 · 겸손 · 봉사 정신의 한동대학교 전자 서명 서비스, <b>HISign</b>입니다.</p>"
-                    + "<p style='font-size:16px; color:#333;'><b>" + document.getMember().getName() + "</b>님이 요청한 <b>'" + document.getFileName() + "'</b> 문서의 서명이 완료되었습니다.</p>"
+                    + "<p style='font-size:16px; color:#333;'><b>" + document.getMember().getName() + "</b>님이 요청한 <b>'" + document.getFileName() + "'</b> 문서의 서명이 <b>완료<b>되었습니다.</p>"
                     + "<p style='font-size:16px; color:#333;'>완료된 서명 문서가 첨부되어 있으니 확인해 주세요.</p>"
                     + "<p style='font-size:14px; color:#666; text-align:center;'>※ 본 메일은 자동 발송되었으며, 회신이 불가능합니다.</p>"
                     + "</div></div>";
