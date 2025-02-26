@@ -55,22 +55,26 @@ public class MailService {
                     + "<p style='font-size:16px; color:#333;'><b>" + from + "</b>님으로부터 <b>'" + documentName + "'</b> 문서의 서명 요청이 도착하였습니다.</p>"
                     + "<p style='font-size:16px; color:#333;'>아래 링크를 클릭하여 서명을 진행해 주세요:</p>"
 
-                    // 요청사항 강조 컨테이너
-                    + "<div style='background-color:#eef6ff; padding:15px; border-radius:5px; border-left:5px solid #0366d6; margin:15px 0;'>"
-                    + "<p style='font-size:16px; font-weight:bold; color:#0366d6;'>📌 요청사항:</p>"
-                    + "<p style='font-size:16px; color:#333; text-align:center; font-style:italic; font-weight:bold; border:1px solid #0366d6; padding:10px; background-color:#ffffff; display:inline-block;'>"
-                    + "\"" + description + "\""
-                    + "</p>"
+                    // ✅ 작업 설명 추가 (컨테이너 안에 강조)
+                    + "<div style='background-color:#eef6ff; padding:15px; border-radius:5px; border-left:5px solid #0366d6; margin:15px 0; '>"
+                    + "<p style='font-size:16px; font-weight:bold; color:#0366d6; margin:0;'>📌 요청사항:</p>"
+                    + "<table role='presentation' width='100%' cellspacing='0' cellpadding='0' border='0'>"
+                    + "    <tr>"
+                    + "        <td align='center' style='padding:10px;'>"
+                    + "            <p style='font-size:16px; color:#333; text-align:center; font-style:italic; font-weight:bold; padding:10px; display:inline-block; margin:0;'>"
+                    + "                \"" + description + "\""
+                    + "            </p>"
+                    + "        </td>"
+                    + "    </tr>"
+                    + "</table>"
                     + "</div>"
 
-                    // 서명 버튼
                     + "<div style='text-align:center; margin:20px 0;'>"
                     + "<a href='" + signatureUrl + "' style='background-color:#0366d6; color:#ffffff; text-decoration:none; padding:12px 20px; border-radius:5px; font-size:18px; display:inline-block;'>서명하기</a>"
                     + "</div>"
-
-                    // 하단 안내 문구
                     + "<p style='font-size:14px; color:#666; text-align:center;'>※ 본 메일은 자동 발송되었으며, 회신이 불가능합니다.</p>"
-                    + "</div></div>";
+                    + "</div>"
+                    + "</div>";
 
             helper.setText(emailContent, true); // HTML 템플릿 적용
             mailSender.send(message);
