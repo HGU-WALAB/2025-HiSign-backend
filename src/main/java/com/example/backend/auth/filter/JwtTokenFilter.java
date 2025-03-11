@@ -48,13 +48,19 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             "/swagger-ui.html",
 
             //와랩 배포용
-//            "/hisign_1/api/auth/.*",
-//            "/hisign_1/swagger-ui/.*",
-//            "/hisign_1/v3/api-docs/.*",
-//            "/hisign_1/v3/api-docs",
-//            "/hisign_1/swagger-resources/.*",
-//            "/hisign_1/webjars/.*",
-//            "/hisign_1/swagger-ui.html"
+            "/hisign_1/api/auth/.*",
+            "/hisign_1/api/signature-requests/check",
+            "/hisign_1/api/signature-requests/validate",
+            "/hisign_1/api/signature-requests/complete",
+            "/hisign_1/api/signature/.*",
+            "/hisign_1/api/documents/sign/.*",
+            "/hisign_1/api/files/signature/upload",
+            "/hisign_1/swagger-ui/.*",
+            "/hisign_1/v3/api-docs/.*",
+            "/hisign_1/v3/api-docs",
+            "/hisign_1/swagger-resources/.*",
+            "/hisign_1/webjars/.*",
+            "/hisign_1/swagger-ui.html"
     };
     return Pattern.compile("^(" + String.join("|", excludedPaths) + ")$");
   }

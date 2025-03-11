@@ -31,7 +31,8 @@ public class MailService {
             String token = request.getToken();
             String documentName = request.getDocument().getFileName();
             String description = request.getDocument().getDescription();
-            String signatureUrl =  client + "/sign?token=" + token;
+            //배포되었을 시에 서명 url에 basename "/hiisign"이 추가되어야함
+            String signatureUrl =  client +"/hisign"+ "/sign?token=" + token;
 
             sendEmail(requestName, senderName ,recipientEmail, documentName, description, signatureUrl);
         }
@@ -103,7 +104,7 @@ public class MailService {
                     + "</div></div>";
 
             helper.setText(emailContent, true);
-            helper.addAttachment(document.getFileName() + "_signed.pdf", new ByteArrayResource(pdfData));
+            helper.addAttachment(document.getFileName(), new ByteArrayResource(pdfData));
 
             mailSender.send(message);
         } catch (MailSendException e) {
