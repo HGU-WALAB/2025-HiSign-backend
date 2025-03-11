@@ -1,6 +1,5 @@
 package com.example.backend.auth.config;
 
-
 import com.example.backend.auth.filter.ExceptionHandlerFilter;
 import com.example.backend.auth.filter.JwtTokenFilter;
 import com.example.backend.auth.service.AuthService;
