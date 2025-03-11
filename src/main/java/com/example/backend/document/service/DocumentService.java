@@ -74,10 +74,34 @@ public class DocumentService {
         return documentRepository.save(document);
     }
 
-    public List<DocumentDTO> getDocumentsByUniqueId(String uniqueId) {
-        List<Document> documents = documentRepository.findByMember_UniqueId(uniqueId);
-        return documents.stream().map(this::convertToDTO).collect(Collectors.toList());
+    public List<Map<String, Object>> getDocumentsByUniqueId(String uniqueId) {
+        List<Object[]> results = documentRepository.findDocumentsWithExpiration(uniqueId);
+
+        if (results == null || results.isEmpty()) {
+            System.out.println("[ERROR] 요청한 문서 데이터가 존재하지 않음. uniqueId: " + uniqueId);
+            return new ArrayList<>();
+        }
+
+        List<Map<String, Object>> documents = new ArrayList<>();
+        for (Object[] result : results) {
+            try {
+                Map<String, Object> docMap = new HashMap<>();
+                docMap.put("id", result[0]);
+                docMap.put("fileName", result[1]);
+                docMap.put("createdAt", result[2]);
+                docMap.put("status", result[3]);
+                docMap.put("requestName", result[4] != null ? result[4] : "작업명 없음");
+                docMap.put("expiredAt", result[5] != null ? result[5] : "미설정");
+
+                documents.add(docMap);
+            } catch (Exception e) {
+                System.out.println("[ERROR] 요청한 문서 데이터 매핑 중 오류 발생: " + e.getMessage());
+            }
+        }
+        return documents;
     }
+
+
 
 
     public List<Map<String, Object>> getDocumentsWithRequesterInfoBySignerEmail(String email) {
@@ -85,7 +109,7 @@ public class DocumentService {
 
         if (results == null || results.isEmpty()) {
             System.out.println("[ERROR] 문서 데이터가 존재하지 않음. email: " + email);
-            return new ArrayList<>(); // 빈 리스트 반환 (오류 방지)
+            return new ArrayList<>();
         }
 
         List<Map<String, Object>> documents = new ArrayList<>();
@@ -93,13 +117,13 @@ public class DocumentService {
         for (Object[] result : results) {
             try {
                 Map<String, Object> docMap = new HashMap<>();
-                docMap.put("id", result[0]);          // document.id
-                docMap.put("fileName", result[1]);    // document.fileName
-                docMap.put("createdAt", result[2]);   // document.createdAt
-                docMap.put("status", result[3]);      // document.status
-                docMap.put("requesterName", result[4] != null ? result[4] : "알 수 없음"); // 요청자 이름
+                docMap.put("id", result[0]);
+                docMap.put("fileName", result[1]);
+                docMap.put("createdAt", result[2]);
+                docMap.put("status", result[3]);
+                docMap.put("requesterName", result[4] != null ? result[4] : "알 수 없음");
                 docMap.put("requestName", result[5] != null ? result[5] : "작업명 없음");
-
+                docMap.put("expiredAt", result[6] != null ? result[6] : "미설정");
                 documents.add(docMap);
             } catch (Exception e) {
                 System.out.println("[ERROR] 문서 데이터 매핑 중 오류 발생: " + e.getMessage());

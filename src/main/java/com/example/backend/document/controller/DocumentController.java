@@ -10,6 +10,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -37,16 +38,25 @@ public class DocumentController {
 
     // 요청한 문서 리스트
     @GetMapping("/requested-documents")
-    public List<DocumentDTO> getRequestedDocuments() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public List<Map<String, Object>> getRequestedDocuments() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        String uniqueId = (principal instanceof AuthDto) ? ((AuthDto)principal).getUniqueId()  : null;
-        if (uniqueId == null) {
-            throw new IllegalStateException("Invalid user");
+        if (authentication == null || !(authentication.getPrincipal() instanceof AuthDto)) {
+            throw new IllegalStateException("사용자의 인증 정보가 유효하지 않습니다.");
         }
+
+        AuthDto authDto = (AuthDto) authentication.getPrincipal();
+        String uniqueId = authDto.getUniqueId();
+
+        if (uniqueId == null) {
+            throw new IllegalStateException("사용자의 고유 ID를 찾을 수 없습니다.");
+        }
+
+        System.out.println("[DEBUG] 요청한 문서 리스트 요청 - UniqueId: " + uniqueId);
 
         return documentService.getDocumentsByUniqueId(uniqueId);
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Resource> getDocument(@PathVariable Long id) {
@@ -104,7 +114,7 @@ public class DocumentController {
     }
 
     @GetMapping("/received-with-requester")
-    public List<Map<String, Object>> getReceivedDocumentsWithRequester() {
+    public List<Map<String, Object>> getReceivedDocuments() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (!(principal instanceof AuthDto)) {
