@@ -1,5 +1,6 @@
 package com.example.backend.mail.service;
 
+import com.example.backend.auth.util.EncryptionUtil;
 import com.example.backend.document.entity.Document;
 import com.example.backend.signatureRequest.entity.SignatureRequest;
 import lombok.RequiredArgsConstructor;
@@ -23,16 +24,18 @@ public class MailService {
     @Value("${spring.mail.username}")
     private String emailAdress;
     private final JavaMailSender mailSender;
+    private final EncryptionUtil encryptionUtil;
 
 
-    public void sendSignatureRequestEmails(String senderName, String requestName ,List<SignatureRequest> requests) {
+    public void sendSignatureRequestEmails(String senderName, String requestName ,List<SignatureRequest> requests) throws Exception {
         for (SignatureRequest request : requests) {
             String recipientEmail = request.getSignerEmail();
             String token = request.getToken();
             String documentName = request.getDocument().getFileName();
             String description = request.getDocument().getDescription();
-            //배포되었을 시에 서명 url에 basename "/hiisign"이 추가되어야함
-            String signatureUrl =  client +"/hisign"+ "/sign?token=" + token;
+            //배포되었을 시에 서명 url에 basename "/hisign"이 추가되어야함
+            String encryptedToken = encryptionUtil.encryptUUID(token);
+            String signatureUrl =  client +"/hisign"+ "/checkEmail?token=" + encryptedToken;
 
             sendEmail(requestName, senderName ,recipientEmail, documentName, description, signatureUrl);
         }
@@ -83,7 +86,6 @@ public class MailService {
             throw new RuntimeException("이메일 전송 실패: " + e.getMessage(), e);
         }
     }
-
 
     public void sendCompletedSignatureMail(String recipientEmail, Document document, byte[] pdfData) {
         try {

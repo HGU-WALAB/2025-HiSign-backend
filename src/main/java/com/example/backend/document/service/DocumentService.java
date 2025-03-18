@@ -1,5 +1,6 @@
 package com.example.backend.document.service;
 
+import com.example.backend.auth.util.EncryptionUtil;
 import com.example.backend.document.dto.DocumentDTO;
 import com.example.backend.document.entity.Document;
 import com.example.backend.document.repository.DocumentRepository;
@@ -33,6 +34,7 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final MemberRepository memberRepository;
     private final SignatureRequestRepository signatureRequestRepository;
+    private final EncryptionUtil encryptionUtil;
 
     public Optional<Document> getDocumentById(Long documentId) {
         return documentRepository.findById(documentId);
@@ -111,10 +113,6 @@ public class DocumentService {
         return documents;
     }
 
-
-
-
-
     @Transactional
     public List<Map<String, Object>> getDocumentsWithRequesterInfoBySignerEmail(String email) {
         List<Object[]> results = documentRepository.findDocumentsBySignerEmailWithRequester(email);
@@ -145,6 +143,19 @@ public class DocumentService {
                 docMap.put("requesterName", result[4] != null ? result[4] : "알 수 없음");
                 docMap.put("requestName", result[5] != null ? result[5] : "작업명 없음");
                 docMap.put("expiredAt", expiredAt != null ? expiredAt : "미설정");
+                String token = result.length > 6 ? (String) result[7] : null;
+                if (token != null) {
+                    try {
+                        String encryptedToken = encryptionUtil.encryptUUID(token);
+                        docMap.put("token", encryptedToken); // 🔹 암호화된 토큰 저장
+                    } catch (Exception e) {
+                        System.out.println("[ERROR] 토큰 암호화 실패: " + e.getMessage());
+                        docMap.put("token", "암호화 실패");
+                    }
+                } else {
+                    docMap.put("token", "토큰 없음");
+                }
+                docMap.put("isRejectable", result[8] != null ? result[8] : "0");
 
                 documents.add(docMap);
             } catch (Exception e) {
@@ -153,7 +164,6 @@ public class DocumentService {
         }
         return documents;
     }
-
 
     @Transactional
     public boolean deleteDocumentById(Long documentId) {
