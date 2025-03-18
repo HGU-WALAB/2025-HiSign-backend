@@ -29,6 +29,11 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
             "WHERE s.signerEmail = :email")
     List<Object[]> findDocumentsBySignerEmailWithRequester(@Param("email") String email);
 
+    @Modifying
+    @Transactional
+    @Query("UPDATE Document d SET d.status = 4 WHERE d.id = :documentId")
+    void updateDocumentStatusToExpired(@Param("documentId") Long documentId);
+
 
     @Modifying
     @Transactional

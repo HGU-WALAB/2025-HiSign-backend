@@ -39,3 +39,5 @@ out/
 application.properties
 
 src/main/resources/templates/uploads/
+/src/main/java/com/example/backend/auth/util/AESKeyGenerator.java
+/src/main/java/com/example/backend/auth/util/AES256SupportChecker.java
