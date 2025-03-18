@@ -51,6 +51,7 @@ public class SecurityConfig {
                     "/api/signature-requests/check",
                     "/api/signature-requests/validate",
                     "/api/signature-requests/complete",
+                    "/api/signature-requests/reject/**",
                     "/api/signature/**",
                     "/api/documents/sign/**",
                     "/api/files/signature/upload",
