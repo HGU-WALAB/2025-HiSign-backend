@@ -76,6 +76,7 @@ public class DocumentService {
 
     public List<Map<String, Object>> getDocumentsByUniqueId(String uniqueId) {
         List<Object[]> results = documentRepository.findDocumentsWithExpiration(uniqueId);
+        LocalDateTime now = LocalDateTime.now();
 
         if (results == null || results.isEmpty()) {
             System.out.println("[ERROR] 요청한 문서 데이터가 존재하지 않음. uniqueId: " + uniqueId);
@@ -86,12 +87,21 @@ public class DocumentService {
         for (Object[] result : results) {
             try {
                 Map<String, Object> docMap = new HashMap<>();
-                docMap.put("id", result[0]);
+                Long docId = (Long) result[0];
+                Integer status = (Integer) result[3];
+                LocalDateTime expiredAt = result[5] != null ? (LocalDateTime) result[5] : null;
+
+                if (expiredAt != null && expiredAt.isBefore(now) && status == 0) {
+                    documentRepository.updateDocumentStatusToExpired(docId);
+                    status = 4;
+                }
+
+                docMap.put("id", docId);
                 docMap.put("fileName", result[1]);
                 docMap.put("createdAt", result[2]);
-                docMap.put("status", result[3]);
+                docMap.put("status", status);
                 docMap.put("requestName", result[4] != null ? result[4] : "작업명 없음");
-                docMap.put("expiredAt", result[5] != null ? result[5] : "미설정");
+                docMap.put("expiredAt", expiredAt != null ? expiredAt : "미설정");
 
                 documents.add(docMap);
             } catch (Exception e) {
@@ -104,8 +114,11 @@ public class DocumentService {
 
 
 
+
+    @Transactional
     public List<Map<String, Object>> getDocumentsWithRequesterInfoBySignerEmail(String email) {
         List<Object[]> results = documentRepository.findDocumentsBySignerEmailWithRequester(email);
+        LocalDateTime now = LocalDateTime.now();
 
         if (results == null || results.isEmpty()) {
             System.out.println("[ERROR] 문서 데이터가 존재하지 않음. email: " + email);
@@ -113,17 +126,26 @@ public class DocumentService {
         }
 
         List<Map<String, Object>> documents = new ArrayList<>();
-
         for (Object[] result : results) {
             try {
                 Map<String, Object> docMap = new HashMap<>();
-                docMap.put("id", result[0]);
+                Long docId = (Long) result[0];
+                Integer status = (Integer) result[3];
+                LocalDateTime expiredAt = result[6] != null ? (LocalDateTime) result[6] : null;
+
+                if (expiredAt != null && expiredAt.isBefore(now) && status == 0) {
+                    documentRepository.updateDocumentStatusToExpired(docId);
+                    status = 4;
+                }
+
+                docMap.put("id", docId);
                 docMap.put("fileName", result[1]);
                 docMap.put("createdAt", result[2]);
-                docMap.put("status", result[3]);
+                docMap.put("status", status);
                 docMap.put("requesterName", result[4] != null ? result[4] : "알 수 없음");
                 docMap.put("requestName", result[5] != null ? result[5] : "작업명 없음");
-                docMap.put("expiredAt", result[6] != null ? result[6] : "미설정");
+                docMap.put("expiredAt", expiredAt != null ? expiredAt : "미설정");
+
                 documents.add(docMap);
             } catch (Exception e) {
                 System.out.println("[ERROR] 문서 데이터 매핑 중 오류 발생: " + e.getMessage());
@@ -131,6 +153,7 @@ public class DocumentService {
         }
         return documents;
     }
+
 
     @Transactional
     public boolean deleteDocumentById(Long documentId) {
