@@ -24,10 +24,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/signature-requests")
@@ -225,4 +223,26 @@ public class SignatureRequestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서명 요청 검증 중 오류가 발생했습니다.");
         }
     }
+
+    @GetMapping("/document/{documentId}/signers")
+    public ResponseEntity<List<Map<String, Object>>> getSignersByDocument(@PathVariable Long documentId) {
+        List<SignatureRequest> requests = signatureRequestRepository.findByDocumentId(documentId);
+
+        if (requests.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+        }
+
+        List<Map<String, Object>> signers = requests.stream().map(request -> {
+            Map<String, Object> signerData = new HashMap<>();
+            signerData.put("name", request.getSignerName());
+            signerData.put("email", request.getSignerEmail());
+            signerData.put("status", request.getStatus());
+
+            return signerData;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(signers);
+    }
+
+
 }
