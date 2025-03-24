@@ -33,8 +33,8 @@ public class MailService {
             String token = request.getToken();
             String documentName = request.getDocument().getFileName();
             String description = request.getDocument().getDescription();
-            //배포되었을 시에 서명 url에 basename "/hisign"이 추가되어야함
             String encryptedToken = encryptionUtil.encryptUUID(token);
+            //배포되었을 시에 서명 url에 basename "/hisign"이 추가되어야함
             String signatureUrl =  client +"/hisign"+ "/checkEmail?token=" + encryptedToken;
 
             sendEmail(requestName, senderName ,recipientEmail, documentName, description, signatureUrl);

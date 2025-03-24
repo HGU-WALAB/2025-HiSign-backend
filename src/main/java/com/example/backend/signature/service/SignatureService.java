@@ -19,10 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -179,15 +176,17 @@ public class SignatureService {
         }
     }
     private List<String> getAllRecipientsForDocument(Long documentId) {
-        List<String> recipients = new ArrayList<>();
+        Set<String> recipients = new HashSet<>(); // 중복 제거를 위한 Set 사용
+
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다. ID: " + documentId));
-        recipients.add(document.getMember().getEmail());
+
+        recipients.add(document.getMember().getEmail()); // 문서 업로더 이메일 추가
 
         List<String> signerEmails = signatureRepository.findSignerEmailsByDocumentId(documentId);
-        recipients.addAll(signerEmails);
+        recipients.addAll(signerEmails);;
 
-        return recipients;
+        return new ArrayList<>(recipients);
     }
 
     public List<SignatureDTO> getSignaturesForDocument(Long documentId) {
