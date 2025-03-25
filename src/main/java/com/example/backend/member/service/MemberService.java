@@ -23,23 +23,5 @@ public class MemberService {
                 .orElseThrow(() -> new IllegalArgumentException("Member not found with uniqueId: " + uniqueId));
     }
 
-    public Member save(Member member) {
-        return memberRepository.save(member);
-    }
-
-    public List<Member> findOrCreateMembers(List<SignerDTO> signers) {
-        List<Member> members = new ArrayList<>();
-        for (SignerDTO signerDto : signers) {
-            Optional<Member> memberOptional = memberRepository.findByEmail(signerDto.getEmail()).map(Member.class::cast);
-            Member member = memberOptional.orElseGet(() -> {
-                Member newMember = Member.builder()
-                        .name(signerDto.getName())
-                        .email(signerDto.getEmail())
-                        .build();
-                return memberRepository.save(newMember);
-            });
-            members.add(member);
-        }
-        return members;
-    }
+    
 }
