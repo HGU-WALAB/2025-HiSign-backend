@@ -6,13 +6,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
     <T> Optional<T> findByUniqueId(String uniqueId);
 
-    Optional<Object> findByEmail(String email);
+    List<Member> findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(String name, String email);
+    List<Member> findByNameContainingIgnoreCase(String name);
+    List<Member> findByEmailContainingIgnoreCase(String email);
 
     // 📌 특정 문서의 uniqueId를 기반으로 멤버 이름 조회
     @Query("SELECT m.name FROM Member m WHERE m.uniqueId = :uniqueId")

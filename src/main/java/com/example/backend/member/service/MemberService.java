@@ -1,14 +1,12 @@
 package com.example.backend.member.service;
 
+import com.example.backend.member.DTO.SearchMemberDTO;
 import com.example.backend.member.entity.Member;
 import com.example.backend.member.repository.MemberRepository;
-import com.example.backend.signatureRequest.DTO.SignerDTO;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityNotFoundException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class MemberService {
@@ -23,23 +21,24 @@ public class MemberService {
                 .orElseThrow(() -> new IllegalArgumentException("Member not found with uniqueId: " + uniqueId));
     }
 
-    public Member save(Member member) {
-        return memberRepository.save(member);
+    public List<SearchMemberDTO> searchSignersByNameOrEmail(String query) {
+        List<Member> members = memberRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(query, query);
+        return members.stream()
+                .map(member -> new SearchMemberDTO(member.getName(), member.getEmail()))
+                .collect(Collectors.toList());
     }
 
-    public List<Member> findOrCreateMembers(List<SignerDTO> signers) {
-        List<Member> members = new ArrayList<>();
-        for (SignerDTO signerDto : signers) {
-            Optional<Member> memberOptional = memberRepository.findByEmail(signerDto.getEmail()).map(Member.class::cast);
-            Member member = memberOptional.orElseGet(() -> {
-                Member newMember = Member.builder()
-                        .name(signerDto.getName())
-                        .email(signerDto.getEmail())
-                        .build();
-                return memberRepository.save(newMember);
-            });
-            members.add(member);
-        }
-        return members;
+    public List<SearchMemberDTO> searchSignersByName(String query) {
+        List<Member> members = memberRepository.findByNameContainingIgnoreCase(query);
+        return members.stream()
+                .map(member -> new SearchMemberDTO(member.getName(), member.getEmail()))
+                .collect(Collectors.toList());
+    }
+
+    public List<SearchMemberDTO> searchSignersByEmail(String query) {
+        List<Member> members = memberRepository.findByEmailContainingIgnoreCase(query);
+        return members.stream()
+                .map(member -> new SearchMemberDTO(member.getName(), member.getEmail()))
+                .collect(Collectors.toList());
     }
 }
