@@ -62,6 +62,7 @@ public class Member extends BaseTime implements Serializable {
         this.major2 = dto.getMajor2();
         this.grade = dto.getGrade();
         this.semester = dto.getSemester();
+        this.loginTime = LocalDateTime.now();
     }
 
     public static Member from(AuthDto dto) {
@@ -82,4 +83,5 @@ public class Member extends BaseTime implements Serializable {
     public String getRole() {
         return Role.fromLevel(this.level).getRoleName();
     }
+
 }

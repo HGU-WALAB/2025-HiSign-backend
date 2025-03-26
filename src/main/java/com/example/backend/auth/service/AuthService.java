@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -32,7 +33,7 @@ public class AuthService {
     Optional<Member> member = memberRepository.findByUniqueId(dto.getUniqueId());
     if (!member.isPresent()) {
       Member newMember=Member.from(dto);
-      memberRepository.save(Member.from(dto));
+      memberRepository.save(newMember);
         return AuthDto.builder()
                 .token(JwtUtil.createToken(newMember.getUniqueId(), newMember.getName(), newMember.getEmail() , newMember.getRole() ,SECRET_KEY))
                 .build();
