@@ -32,4 +32,10 @@ public interface SignatureRequestRepository extends JpaRepository<SignatureReque
     Optional<SignatureRequest> findByToken(String token);
 
     List<SignatureRequest> findByDocumentIdAndSignerEmail(Long documentId, String signerEmail);
+
+    @Query("SELECT sr.signerName, sr.signerEmail, sr.status, s.signedAt " +
+            "FROM SignatureRequest sr " +
+            "LEFT JOIN Signature s ON sr.document.id = s.document.id AND sr.signerEmail = s.signerEmail " +
+            "WHERE sr.document.id = :documentId")
+    List<Object[]> findSignerInfoWithSignedAt(@Param("documentId") Long documentId);
 }
