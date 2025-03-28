@@ -18,10 +18,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AuthService {
 
-  private final MemberRepository memberRepository;
-
   @Value("${custom.jwt.secret}")
   private String SECRET_KEY;
+  private final MemberRepository memberRepository;
 
   public Member getLoginMember(String uniqueId) {
     return (Member) memberRepository
@@ -36,23 +35,13 @@ public class AuthService {
       memberRepository.save(newMember);
         return AuthDto.builder()
                 .token(
-                        JwtUtil.createToken(
-                                newMember.getUniqueId(),
-                                newMember.getName(),
-                                newMember.getEmail(),
-                                newMember.getRole(),
-                                SECRET_KEY))
+                        JwtUtil.createToken(newMember,SECRET_KEY))
                 .build();
     }else {
       member.get().update(dto);
       return AuthDto.builder()
               .token(
-                      JwtUtil.createToken(
-                              member.get().getUniqueId(),
-                              member.get().getName(),
-                              member.get().getEmail(),
-                              member.get().getRole(),
-                              SECRET_KEY))
+                      JwtUtil.createToken(member.get(),SECRET_KEY))
               .build();
     }
   }

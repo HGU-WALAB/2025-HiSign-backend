@@ -4,11 +4,14 @@ import com.example.backend.auth.dto.AuthDto;
 import com.example.backend.auth.exception.DoNotLoginException;
 import com.example.backend.auth.exception.WrongTokenException;
 import com.example.backend.auth.service.AuthService;
+import com.example.backend.auth.util.CookieUtil;
 import com.example.backend.auth.util.JwtUtil;
 import com.example.backend.member.entity.Member;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,11 +27,12 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.regex.Pattern;
 
+@Slf4j
 @RequiredArgsConstructor
 public class JwtTokenFilter extends OncePerRequestFilter {
 
   private final AuthService authService;
-
+  private final CookieUtil cookieUtil;
   private final String SECRET_KEY;
 
   // ✅ 가독성을 위한 정적 메서드로 예외 엔드포인트를 패턴화
@@ -78,11 +82,11 @@ public class JwtTokenFilter extends OncePerRequestFilter {
           @NonNull FilterChain filterChain
   ) throws ServletException, IOException {
     String requestURI = request.getRequestURI();
+    log.debug("🚀 JwtTokenFilter: 요청 URI: {}", requestURI);
 
     // ✅ 패턴화된 예외 엔드포인트 검사
     if (EXCLUDED_PATH_PATTERN.matcher(requestURI).matches()) {
-      System.out.println("Request URI: " + requestURI);
-      System.out.println("Excluding from JWT filter: " + requestURI);
+      log.debug("🔸 JwtTokenFilter: 제외된 경로입니다. 필터 체인 계속 진행.");
       filterChain.doFilter(request, response);
       return;
     }
@@ -101,22 +105,53 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         }
       }
     }
-    if (accessToken == null && refreshToken == null) throw new DoNotLoginException();
 
-    Member loginMember = authService.getLoginMember(JwtUtil.getUserId(accessToken, SECRET_KEY));
+    try {
+      log.debug("🛡️ 액세스 토큰 검증 중...");
+      Member loginMember = authService.getLoginMember(JwtUtil.getUserId(accessToken, SECRET_KEY));
+      UsernamePasswordAuthenticationToken authenticationToken =
+              new UsernamePasswordAuthenticationToken(
+                      AuthDto.builder()
+                              .uniqueId(loginMember.getUniqueId())
+                              .email(loginMember.getEmail())
+                              .build(),
+                      null,
+                      Collections.singletonList(new SimpleGrantedAuthority(loginMember.getRole())));
 
-    UsernamePasswordAuthenticationToken authenticationToken =
-            new UsernamePasswordAuthenticationToken(
-                    AuthDto.builder()
-                            .uniqueId(loginMember.getUniqueId())
-                            .email(loginMember.getEmail())
-                            .build(),
-                    null,
-                    Collections.singletonList(new SimpleGrantedAuthority(loginMember.getRole())));
+      authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+      SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+    } catch (WrongTokenException e) {
+      if(refreshToken != null) {
+        try {
+          log.debug("🛡️ 리프레시 토큰 검증 중...");
+          Member loginMember = authService.getLoginMember(JwtUtil.getUserId(accessToken, SECRET_KEY));
+          String newAccessToken = JwtUtil.createToken(loginMember,SECRET_KEY);
+          ResponseCookie accessCookie = cookieUtil.createAccessTokenCookie(newAccessToken);
+          response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
-    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+          log.info("🔄 사용자 {} 액세스 토큰 리프레시 성공", loginMember.getName());
 
+          UsernamePasswordAuthenticationToken authenticationToken =
+                  new UsernamePasswordAuthenticationToken(
+                          AuthDto.builder()
+                                  .uniqueId(loginMember.getUniqueId())
+                                  .email(loginMember.getEmail())
+                                  .build(),
+                          null,
+                          Collections.singletonList(new SimpleGrantedAuthority(loginMember.getRole())));
+
+          authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+          SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+      } catch (Exception refreshEx) {
+        // 더 상세한 로깅을 포함한 개선된 예외 처리
+        log.error("❌ 토큰 리프레시 실패: {}", refreshEx.getMessage());
+        throw new DoNotLoginException();
+      }
+      } else {
+        log.error("❌ refreshToken이 존재하지 않습니다. 로그인이 필요합니다.");
+        throw new DoNotLoginException();
+      }
+    }
     System.out.println("User authenticated successfully.");
     filterChain.doFilter(request, response);
   }

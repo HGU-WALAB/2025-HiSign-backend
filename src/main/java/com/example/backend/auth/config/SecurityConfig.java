@@ -3,6 +3,7 @@ package com.example.backend.auth.config;
 import com.example.backend.auth.filter.ExceptionHandlerFilter;
 import com.example.backend.auth.filter.JwtTokenFilter;
 import com.example.backend.auth.service.AuthService;
+import com.example.backend.auth.util.CookieUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +28,7 @@ import java.util.List;
 public class SecurityConfig {
 
   private final AuthService authService;
+  private final CookieUtil cookieUtil;
 
   @Value("${custom.host.client}")
   private List <String> client;
@@ -41,7 +43,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .addFilterBefore(new ExceptionHandlerFilter(), UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(
-                    new JwtTokenFilter(authService, SECRET_KEY), UsernamePasswordAuthenticationFilter.class)
+                    new JwtTokenFilter(authService, cookieUtil, SECRET_KEY), UsernamePasswordAuthenticationFilter.class)
             .sessionManagement()
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
