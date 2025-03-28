@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -90,10 +91,13 @@ public class MailService {
     public void sendCompletedSignatureMail(String recipientEmail, Document document, byte[] pdfData) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
+            message.removeHeader("In-Reply-To");
+            message.removeHeader("References");
+            message.setHeader("Message-ID", "<" + UUID.randomUUID() + "@hisign.domain>");
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(recipientEmail);
-            helper.setSubject("[전자 서명 완료] " + document.getRequestName() );
+            helper.setSubject("[서명 완료] " + document.getRequestName() );
             helper.setFrom(emailAdress);
 
             String emailContent = "<div style='background-color:#f4f8fb; padding:30px; font-family:Arial, sans-serif;'>"
