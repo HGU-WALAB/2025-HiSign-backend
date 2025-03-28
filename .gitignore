@@ -37,6 +37,8 @@ out/
 .vscode/
 
 application.properties
+application-dev.properties
+application-prod.properties
 
 src/main/resources/templates/uploads/
 /src/main/java/com/example/backend/auth/util/AESKeyGenerator.java

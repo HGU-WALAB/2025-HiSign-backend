@@ -1,5 +1,6 @@
 package com.example.backend.auth.service;
 
+import com.example.backend.auth.config.CookieProperties;
 import com.example.backend.auth.dto.AuthDto;
 import com.example.backend.auth.exception.DoNotExistException;
 import com.example.backend.auth.util.JwtUtil;
@@ -18,10 +19,10 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AuthService {
 
-  private final MemberRepository memberRepository;
-
   @Value("${custom.jwt.secret}")
   private String SECRET_KEY;
+  private final CookieProperties cookieProperties;
+  private final MemberRepository memberRepository;
 
   public Member getLoginMember(String uniqueId) {
     return (Member) memberRepository
@@ -35,14 +36,14 @@ public class AuthService {
       Member newMember=Member.from(dto);
       memberRepository.save(newMember);
         return AuthDto.builder()
-                .token(JwtUtil.createToken(newMember.getUniqueId(), newMember.getName(), newMember.getEmail() , newMember.getRole() ,SECRET_KEY))
+                .token(
+                        JwtUtil.createToken(newMember,SECRET_KEY,cookieProperties.getAccessTokenMaxAge()))
                 .build();
     }else {
       member.get().update(dto);
       return AuthDto.builder()
               .token(
-                      JwtUtil.createToken(
-                              member.get().getUniqueId(), member.get().getName(), member.get().getEmail() , member.get().getRole(),SECRET_KEY))
+                      JwtUtil.createToken(member.get(),SECRET_KEY,cookieProperties.getAccessTokenMaxAge()))
               .build();
     }
   }
