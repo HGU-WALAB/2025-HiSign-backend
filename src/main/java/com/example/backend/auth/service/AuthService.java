@@ -35,14 +35,24 @@ public class AuthService {
       Member newMember=Member.from(dto);
       memberRepository.save(newMember);
         return AuthDto.builder()
-                .token(JwtUtil.createToken(newMember.getUniqueId(), newMember.getName(), newMember.getEmail() , newMember.getRole() ,SECRET_KEY))
+                .token(
+                        JwtUtil.createToken(
+                                newMember.getUniqueId(),
+                                newMember.getName(),
+                                newMember.getEmail(),
+                                newMember.getRole(),
+                                SECRET_KEY))
                 .build();
     }else {
       member.get().update(dto);
       return AuthDto.builder()
               .token(
                       JwtUtil.createToken(
-                              member.get().getUniqueId(), member.get().getName(), member.get().getEmail() , member.get().getRole(),SECRET_KEY))
+                              member.get().getUniqueId(),
+                              member.get().getName(),
+                              member.get().getEmail(),
+                              member.get().getRole(),
+                              SECRET_KEY))
               .build();
     }
   }

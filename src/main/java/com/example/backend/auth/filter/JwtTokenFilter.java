@@ -19,6 +19,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Cookie;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.regex.Pattern;
@@ -86,19 +87,23 @@ public class JwtTokenFilter extends OncePerRequestFilter {
       return;
     }
 
-    String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-    if (authorizationHeader == null) {
-      System.out.println("Authorization header missing. Blocking request.");
-      throw new DoNotLoginException();
-    }
+    Cookie[] cookies = request.getCookies();
+    String accessToken = null;
+    String refreshToken = null;
 
-    if (!authorizationHeader.startsWith("Bearer ")) {
-      System.out.println("Invalid token format.");
-      throw new WrongTokenException("Bearer 로 시작하지 않는 토큰입니다.");
+    if (cookies != null) {
+      for (Cookie cookie : cookies) {
+        if ("accessToken".equals(cookie.getName())) {
+          accessToken = cookie.getValue();
+        }
+        if ("refreshToken".equals(cookie.getName())) {
+          refreshToken = cookie.getValue();
+        }
+      }
     }
+    if (accessToken == null && refreshToken == null) throw new DoNotLoginException();
 
-    String token = authorizationHeader.split(" ")[1];
-    Member loginMember = authService.getLoginMember(JwtUtil.getUserId(token, SECRET_KEY));
+    Member loginMember = authService.getLoginMember(JwtUtil.getUserId(accessToken, SECRET_KEY));
 
     UsernamePasswordAuthenticationToken authenticationToken =
             new UsernamePasswordAuthenticationToken(
