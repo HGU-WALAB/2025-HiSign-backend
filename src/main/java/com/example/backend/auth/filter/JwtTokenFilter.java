@@ -1,5 +1,6 @@
 package com.example.backend.auth.filter;
 
+import com.example.backend.auth.config.CookieProperties;
 import com.example.backend.auth.dto.AuthDto;
 import com.example.backend.auth.exception.DoNotLoginException;
 import com.example.backend.auth.exception.WrongTokenException;
@@ -32,6 +33,7 @@ import java.util.regex.Pattern;
 public class JwtTokenFilter extends OncePerRequestFilter {
 
   private final AuthService authService;
+  private final CookieProperties cookieProperties;
   private final CookieUtil cookieUtil;
   private final String SECRET_KEY;
 
@@ -124,8 +126,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
       if(refreshToken != null) {
         try {
           log.debug("🛡️ 리프레시 토큰 검증 중...");
-          Member loginMember = authService.getLoginMember(JwtUtil.getUserId(accessToken, SECRET_KEY));
-          String newAccessToken = JwtUtil.createToken(loginMember,SECRET_KEY);
+          Member loginMember = authService.getLoginMember(JwtUtil.getUserId(refreshToken, SECRET_KEY));
+          String newAccessToken = JwtUtil.createToken(loginMember,SECRET_KEY,cookieProperties.getAccessTokenMaxAge());
           ResponseCookie accessCookie = cookieUtil.createAccessTokenCookie(newAccessToken);
           response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 

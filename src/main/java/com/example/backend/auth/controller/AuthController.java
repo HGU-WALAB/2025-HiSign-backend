@@ -1,5 +1,6 @@
 package com.example.backend.auth.controller;
 
+import com.example.backend.auth.config.CookieProperties;
 import com.example.backend.auth.controller.request.LoginRequest;
 import com.example.backend.auth.controller.response.LoginResponse;
 import com.example.backend.auth.dto.AuthDto;
@@ -8,6 +9,7 @@ import com.example.backend.auth.service.HisnetLoginService;
 import com.example.backend.auth.util.CookieUtil;
 import com.example.backend.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -18,11 +20,13 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
+  private final CookieProperties cookieProperties;
   @Value("${custom.jwt.secret}")
   private String SECRET_KEY;
   private final CookieUtil cookieUtil;
@@ -32,9 +36,13 @@ public class AuthController {
   @PostMapping("/login")
   public ResponseEntity<LoginResponse> Login(@RequestBody LoginRequest request) {
 
-    AuthDto hisnetAutMember = authService.login(hisnetLoginService.callHisnetLoginApi(AuthDto.from(request)));
-    String accessToken = hisnetAutMember.getToken();
-    String refreshToken = JwtUtil.createRefreshToken(hisnetAutMember.getUniqueId(),SECRET_KEY);
+    AuthDto hisnetLoginedMember = hisnetLoginService.callHisnetLoginApi(AuthDto.from(request));
+    log.debug("hisnetAutMember: {}", hisnetLoginedMember.toString());
+    String accessToken = authService.login(hisnetLoginedMember).getToken();
+    String refreshToken = JwtUtil.createRefreshToken(hisnetLoginedMember.getUniqueId(),SECRET_KEY,cookieProperties.getRefreshTokenMaxAge());
+
+    log.debug("✅ Generated AccessToken: {}", accessToken);
+    log.debug("✅ Generated RefreshToken: {}", refreshToken);
 
     ResponseCookie accessCookie = cookieUtil.createAccessTokenCookie(accessToken);
     ResponseCookie refreshCookie = cookieUtil.createRefreshTokenCookie(refreshToken);
@@ -43,7 +51,7 @@ public class AuthController {
     headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
     headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-    LoginResponse loginResponse = LoginResponse.from(hisnetAutMember);
+    LoginResponse loginResponse = LoginResponse.from(authService.login(hisnetLoginedMember));
     return ResponseEntity.ok()
             .headers(headers)
             .body(loginResponse);

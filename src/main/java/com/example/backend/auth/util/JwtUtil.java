@@ -13,12 +13,8 @@ import java.util.Date;
 
 @Slf4j
 public class JwtUtil {
-
-  public static final long ACCESS_EXPIRE_TIME_MS = 1000 * 60 * 3;  //2시간
-  public static final long REFRESH_EXPIRE_TIME_MS = 1000 * 60 * 60 * 24 * 7; //일주일
-
   // JWT Token 발급
-  public static String createToken(Member member,String secretKey) {
+  public static String createToken(Member member,String secretKey,Long accessExpireTime) {
     Key key = getSigningKey(secretKey);
 
     return Jwts.builder()
@@ -27,18 +23,18 @@ public class JwtUtil {
             .claim("name", member.getName())
             .claim("role", member.getRole())
             .setIssuedAt(new Date())
-            .setExpiration(new Date(System.currentTimeMillis() + ACCESS_EXPIRE_TIME_MS))
+            .setExpiration(new Date(System.currentTimeMillis() + accessExpireTime*1000))
             .signWith(key)
             .compact();
   }
 
-  public static String createRefreshToken(String uniqueId,String secretKey) {
+  public static String createRefreshToken(String uniqueId,String secretKey,Long accessExpireTime) {
     Key key = getSigningKey(secretKey);
 
     return Jwts.builder()
             .setSubject(uniqueId)
             .setIssuedAt(new Date())
-            .setExpiration(new Date(System.currentTimeMillis() + REFRESH_EXPIRE_TIME_MS))
+            .setExpiration(new Date(System.currentTimeMillis() + accessExpireTime*1000))
             .signWith(key)
             .compact();
   }
@@ -53,7 +49,7 @@ public class JwtUtil {
       log.error("토큰이 null이거나 비어있습니다");
       throw new WrongTokenException("토큰이 없습니다.");
     }
-    return extractClaims(token, secretKey).get("uniqueId", String.class);
+    return extractClaims(token, secretKey).getSubject();
   }
 
   private static Claims extractClaims(String token, String secretKey) {

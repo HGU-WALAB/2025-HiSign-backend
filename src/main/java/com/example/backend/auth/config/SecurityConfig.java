@@ -28,6 +28,7 @@ import java.util.List;
 public class SecurityConfig {
 
   private final AuthService authService;
+  private final CookieProperties cookieProperties;
   private final CookieUtil cookieUtil;
 
   @Value("${custom.host.client}")
@@ -43,7 +44,8 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .addFilterBefore(new ExceptionHandlerFilter(), UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(
-                    new JwtTokenFilter(authService, cookieUtil, SECRET_KEY), UsernamePasswordAuthenticationFilter.class)
+                    new JwtTokenFilter(authService, cookieProperties, cookieUtil, SECRET_KEY),
+                    UsernamePasswordAuthenticationFilter.class)
             .sessionManagement()
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
