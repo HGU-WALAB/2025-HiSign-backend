@@ -38,16 +38,16 @@ public class Member extends BaseTime implements Serializable {
     @Column(nullable = false, length = 50)
     private String department;
 
-    @Column(nullable = false, length = 50)
+    @Column(length = 50)
     private String major1;
 
-    @Column(nullable = false, length = 50)
+    @Column(length = 50)
     private String major2;
 
-    @Column(nullable = false)
+    @Column
     private Integer grade;
 
-    @Column
+    @Column(nullable = false)
     private Integer semester;
 
     @Column(nullable = false)
