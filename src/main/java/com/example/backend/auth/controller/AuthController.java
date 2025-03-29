@@ -36,10 +36,11 @@ public class AuthController {
   @PostMapping("/login")
   public ResponseEntity<LoginResponse> Login(@RequestBody LoginRequest request) {
 
-    AuthDto hisnetLoginedMember = hisnetLoginService.callHisnetLoginApi(AuthDto.from(request));
-    log.debug("hisnetAutMember: {}", hisnetLoginedMember.toString());
-    String accessToken = authService.login(hisnetLoginedMember).getToken();
-    String refreshToken = JwtUtil.createRefreshToken(hisnetLoginedMember.getUniqueId(),SECRET_KEY,cookieProperties.getRefreshTokenMaxAge());
+    AuthDto hisnetLoggedinAuthDTO = hisnetLoginService.callHisnetLoginApi(AuthDto.from(request));
+    log.debug("hisnetAutMember: {}", hisnetLoggedinAuthDTO.toString());
+    AuthDto LoggedinMemberAuthDTO = authService.login(hisnetLoggedinAuthDTO);
+    String accessToken = LoggedinMemberAuthDTO.getToken();
+    String refreshToken = JwtUtil.createRefreshToken(hisnetLoggedinAuthDTO.getUniqueId(),SECRET_KEY,cookieProperties.getRefreshTokenMaxAge());
 
     log.debug("✅ Generated AccessToken: {}", accessToken);
     log.debug("✅ Generated RefreshToken: {}", refreshToken);
@@ -51,7 +52,7 @@ public class AuthController {
     headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
     headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-    LoginResponse loginResponse = LoginResponse.from(authService.login(hisnetLoginedMember));
+    LoginResponse loginResponse = LoginResponse.from(LoggedinMemberAuthDTO);
     return ResponseEntity.ok()
             .headers(headers)
             .body(loginResponse);

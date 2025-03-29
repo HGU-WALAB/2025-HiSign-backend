@@ -45,16 +45,26 @@ public class HisnetLoginService {
           restTemplate.exchange(uri.toString(), HttpMethod.POST, entity, typeRef);
       Map<String, Object> result = resultMap.getBody();
       assert result != null;
-      return AuthDto.builder()
-              .uniqueId(result.get("uniqueId").toString())
-              .name(result.get("name").toString())
-              .email(result.get("email").toString())
-              .department(result.get("department").toString())
-              .major1(result.get("major1").toString())
-              .major2(result.get("major2").toString())
-              .grade(Integer.parseInt(result.get("grade").toString()))
-              .semester(Integer.parseInt(result.get("semester").toString()))
-              .level(0)
+      String uniqueId = (String) result.get("uniqueId");
+      String name = (String) result.get("name");
+      String email = (String) result.get("email");
+      String department = (String) result.get("department");
+      String major1 = (String) result.get("major1");
+      String major2 = (String) result.get("major2");
+      Integer grade = result.get("grade") != null ? Integer.parseInt(result.get("grade").toString()) : null;
+      int semester = Integer.parseInt(result.get("semester").toString());
+      int level = (grade == null && major1 == null && major2 == null && semester == 0) ? 1 : 0;
+
+      return  AuthDto.builder()
+              .uniqueId(uniqueId)
+              .name(name)
+              .email(email)
+              .department(department)
+              .major1(major1)
+              .major2(major2)
+              .grade(grade)
+              .semester(semester)
+              .level(level)
               .build();
     } catch (HttpStatusCodeException e) {
       Map<String, Object> result = new HashMap<>();
