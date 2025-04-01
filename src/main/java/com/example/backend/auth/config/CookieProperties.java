@@ -19,4 +19,6 @@ public class CookieProperties {
     private long accessTokenMaxAge;
 
     private long refreshTokenMaxAge;
+
+    private long signerMaxAge;
 }

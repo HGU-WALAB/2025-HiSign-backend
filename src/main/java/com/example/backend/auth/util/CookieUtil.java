@@ -34,6 +34,16 @@ public class CookieUtil {
                 .build();
     }
 
+    public ResponseCookie createSignerTokenCookie(String token) {
+        return ResponseCookie.from("signerToken", token)
+                .httpOnly(true)
+                .secure(properties.isSecure())
+                .sameSite(properties.getSameSite())
+                .path("/")
+                .maxAge(properties.getRefreshTokenMaxAge())
+                .build();
+    }
+
     public ResponseCookie expireAccessTokenCookie() {
         return ResponseCookie.from("accessToken", "")
                 .httpOnly(true)
@@ -46,6 +56,16 @@ public class CookieUtil {
 
     public ResponseCookie expireRefreshTokenCookie() {
         return ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(properties.isSecure())
+                .sameSite(properties.getSameSite())
+                .path("/")
+                .maxAge(0)
+                .build();
+    }
+
+    public ResponseCookie expireSignerTokenCookie() {
+        return ResponseCookie.from("signerToken", "")
                 .httpOnly(true)
                 .secure(properties.isSecure())
                 .sameSite(properties.getSameSite())
