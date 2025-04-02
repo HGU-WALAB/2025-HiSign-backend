@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -38,7 +39,7 @@ public class DocumentController {
 
     // 요청한 문서 리스트
     @GetMapping("/requested-documents")
-    public List<Map<String, Object>> getRequestedDocuments() {
+    public List<Map<String, Object>> getRequestedDocuments(@RequestParam(value = "searchQuery", required = false) String searchQuery) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !(authentication.getPrincipal() instanceof AuthDto)) {
@@ -54,8 +55,17 @@ public class DocumentController {
 
         System.out.println("[DEBUG] 요청한 문서 리스트 요청 - UniqueId: " + uniqueId);
 
-        return documentService.getDocumentsByUniqueId(uniqueId);
+        List<Map<String, Object>> documents = documentService.getDocumentsByUniqueId(uniqueId);
+
+        if (searchQuery != null && !searchQuery.isEmpty()) {
+            documents = documents.stream()
+                    .filter(doc -> doc.get("requestName").toString().toLowerCase().contains(searchQuery.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        return documents;
     }
+
 
 
     @GetMapping("/{id}")
@@ -129,5 +139,7 @@ public class DocumentController {
     }
 
 
+
 }
+
 
