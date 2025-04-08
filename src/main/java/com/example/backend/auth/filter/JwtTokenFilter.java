@@ -111,17 +111,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     try {
       log.debug("🛡️ 액세스 토큰 검증 중...");
       Member loginMember = authService.getLoginMember(JwtUtil.getUserId(accessToken, SECRET_KEY));
-      UsernamePasswordAuthenticationToken authenticationToken =
-              new UsernamePasswordAuthenticationToken(
-                      AuthDto.builder()
-                              .uniqueId(loginMember.getUniqueId())
-                              .email(loginMember.getEmail())
-                              .build(),
-                      null,
-                      Collections.singletonList(new SimpleGrantedAuthority(loginMember.getRole())));
-
-      authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-      SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+      setUserPasswordAuthenticationToken(request, loginMember);
     } catch (WrongTokenException e) {
       if(refreshToken != null) {
         try {
@@ -133,18 +123,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
           log.info("🔄 사용자 {} 액세스 토큰 리프레시 성공", loginMember.getName());
 
-          UsernamePasswordAuthenticationToken authenticationToken =
-                  new UsernamePasswordAuthenticationToken(
-                          AuthDto.builder()
-                                  .uniqueId(loginMember.getUniqueId())
-                                  .email(loginMember.getEmail())
-                                  .build(),
-                          null,
-                          Collections.singletonList(new SimpleGrantedAuthority(loginMember.getRole())));
-
-          authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-          SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-      } catch (Exception refreshEx) {
+          setUserPasswordAuthenticationToken(request, loginMember);
+        } catch (Exception refreshEx) {
         // 더 상세한 로깅을 포함한 개선된 예외 처리
         log.error("❌ 토큰 리프레시 실패: {}", refreshEx.getMessage());
         throw new DoNotLoginException();
@@ -156,6 +136,22 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     }
     System.out.println("User authenticated successfully.");
     filterChain.doFilter(request, response);
+  }
+
+  private void setUserPasswordAuthenticationToken(HttpServletRequest request, Member loginMember) {
+    UsernamePasswordAuthenticationToken authenticationToken =
+            new UsernamePasswordAuthenticationToken(
+                    AuthDto.builder()
+                            .uniqueId(loginMember.getUniqueId())
+                            .name(loginMember.getName())
+                            .email(loginMember.getEmail())
+                            .level(loginMember.getLevel())
+                            .build(),
+                    null,
+                    Collections.singletonList(new SimpleGrantedAuthority(loginMember.getRole())));
+
+    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
   }
 
 }
