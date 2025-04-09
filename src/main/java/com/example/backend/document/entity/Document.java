@@ -51,5 +51,8 @@ public class Document {
     @Column(length = 255)
     private String description;
 
+    @Column(nullable = false, columnDefinition = "TINYINT")
+    private Integer type; // 0: 기본 1: TA 근무일지
+
 }
 
