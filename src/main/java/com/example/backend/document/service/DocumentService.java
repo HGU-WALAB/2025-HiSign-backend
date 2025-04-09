@@ -52,10 +52,11 @@ public class DocumentService {
                 .status(document.getStatus())
                 .isRejectable(document.getIsRejectable())
                 .description(document.getDescription())
+                .type(document.getType())
                 .build();
     }
 
-    public Document saveDocument(String requestName,MultipartFile file, String savedFileName, Member member, Integer IsRejectable, String description) {
+    public Document saveDocument(String requestName,MultipartFile file, String savedFileName, Member member, Integer IsRejectable, String description, Integer type) {
 
         Optional<Member> existingMember = memberRepository.findByUniqueId(member.getUniqueId());
 
@@ -71,6 +72,7 @@ public class DocumentService {
         document.setStatus(0); // 초기 상태 설정
         document.setIsRejectable(IsRejectable);
         document.setDescription(description);
+        document.setType(type);
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
         return documentRepository.save(document);
