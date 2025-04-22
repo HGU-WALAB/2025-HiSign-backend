@@ -28,7 +28,7 @@ public class MailService {
     private final EncryptionUtil encryptionUtil;
 
 
-    public void sendSignatureRequestEmails(String senderName, String requestName ,List<SignatureRequest> requests) throws Exception {
+    public void sendSignatureRequestEmails(String senderName, String requestName ,List<SignatureRequest> requests, Integer password) throws Exception {
         for (SignatureRequest request : requests) {
             String recipientEmail = request.getSignerEmail();
             String token = request.getToken();
@@ -38,11 +38,11 @@ public class MailService {
             //배포되었을 시에 서명 url에 basename "/hisign"이 추가되어야함
             String signatureUrl =  client +"/hisign"+ "/checkEmail?token=" + encryptedToken;
 
-            sendEmail(requestName, senderName ,recipientEmail, documentName, description, signatureUrl);
+            sendEmail(requestName, senderName ,recipientEmail, documentName, description, signatureUrl,password);
         }
     }
 
-    public void sendEmail(String requestName, String from, String to, String documentName, String description, String signatureUrl) {
+    public void sendEmail(String requestName, String from, String to, String documentName, String description, String signatureUrl, Integer password) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -60,8 +60,14 @@ public class MailService {
                     + "<p style='font-size:16px; color:#333;'><b>" + from + "</b>님으로부터 <b>'" + documentName + "'</b> 문서의 서명 요청이 도착하였습니다.</p>"
                     + "<p style='font-size:16px; color:#333;'>아래 링크를 클릭하여 서명을 진행해 주세요:</p>"
 
-                    // ✅ 작업 설명 추가 (컨테이너 안에 강조)
-                    + "<div style='background-color:#eef6ff; padding:15px; border-radius:5px; border-left:5px solid #0366d6; margin:15px 0; '>"
+                    // 🔐 password 표시 블록
+                    + "<div style='background-color:#fff6e5; padding:15px; border-radius:5px; border-left:5px solid #ff9900; margin:15px 0;'>"
+                    + "<p style='font-size:16px; font-weight:bold; color:#ff9900; margin:0;'>🔐 접근 비밀번호:</p>"
+                    + "<p style='font-size:18px; font-weight:bold; color:#333; margin:5px 0 0 0; text-align:center;'>" + password + "</p>"
+                    + "</div>"
+
+                    // 📌 요청사항 표시 블록
+                    + "<div style='background-color:#eef6ff; padding:15px; border-radius:5px; border-left:5px solid #0366d6; margin:15px 0;'>"
                     + "<p style='font-size:16px; font-weight:bold; color:#0366d6; margin:0;'>📌 요청사항:</p>"
                     + "<table role='presentation' width='100%' cellspacing='0' cellpadding='0' border='0'>"
                     + "    <tr>"

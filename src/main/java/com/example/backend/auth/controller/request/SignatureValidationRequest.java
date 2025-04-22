@@ -1,4 +1,4 @@
-package com.example.backend.signatureRequest.controller.request;
+package com.example.backend.auth.controller.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

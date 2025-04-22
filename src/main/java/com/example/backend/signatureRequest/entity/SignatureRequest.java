@@ -47,6 +47,9 @@ public class SignatureRequest {
     @Column(length = 255, nullable = true)
     private String rejectReason;
 
+    @Column(nullable = false)
+    private Integer password;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
