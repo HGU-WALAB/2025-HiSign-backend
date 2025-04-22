@@ -43,7 +43,7 @@ public class SignatureRequestController {
 
         try {
         // 2. 서명 요청 생성 및 저장
-        List<SignatureRequest> requests = signatureRequestService.createSignatureRequests(document, requestDto.getSigners());
+        List<SignatureRequest> requests = signatureRequestService.createSignatureRequests(document, requestDto.getSigners(), requestDto.getPassword());
 
         // 4. 서명 필드 저장
         for (SignerDTO singer : requestDto.getSigners()) {
@@ -62,7 +62,7 @@ public class SignatureRequestController {
         }
 
         //5. 메일 전송
-        mailService.sendSignatureRequestEmails(requestDto.getMemberName(), document.getRequestName(),requests);
+        mailService.sendSignatureRequestEmails(requestDto.getMemberName(), document.getRequestName(),requests, requestDto.getPassword());
 
         return ResponseEntity.ok("서명 요청이 성공적으로 생성되었습니다.");
         } catch (MailSendException e) {

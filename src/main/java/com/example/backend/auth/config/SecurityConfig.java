@@ -53,7 +53,7 @@ public class SecurityConfig {
             .antMatchers(
                     "/api/auth/**",
                     "/api/signature-requests/check",
-                    "/api/signature-requests/validate",
+                    "/api/auth/signer/validate",
                     "/api/signature-requests/complete",
                     "/api/signature-requests/reject/**",
                     "/api/signature/**",

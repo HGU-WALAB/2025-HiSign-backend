@@ -26,7 +26,7 @@ public class SignatureRequestService {
         this.documentRepository = documentRepository;
     }
 
-    public List<SignatureRequest> createSignatureRequests(Document document, List<SignerDTO> signers) {
+    public List<SignatureRequest> createSignatureRequests(Document document, List<SignerDTO> signers, Integer password) {
         List<SignatureRequest> requests = signers.stream().map(signer -> {
             String token = UUID.randomUUID().toString();
             return SignatureRequest.builder()
@@ -37,6 +37,7 @@ public class SignatureRequestService {
                     .createdAt(LocalDateTime.now())
                     .expiredAt(LocalDateTime.now().plusDays(7))
                     .status(0)  // 대기 상태
+                    .password(password)
                     .build();
         }).collect(Collectors.toList());
 
