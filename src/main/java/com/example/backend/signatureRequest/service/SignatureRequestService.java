@@ -26,7 +26,7 @@ public class SignatureRequestService {
         this.documentRepository = documentRepository;
     }
 
-    public List<SignatureRequest> createSignatureRequests(Document document, List<SignerDTO> signers, Integer password) {
+    public List<SignatureRequest> createSignatureRequests(Document document, List<SignerDTO> signers, String password) {
         List<SignatureRequest> requests = signers.stream().map(signer -> {
             String token = UUID.randomUUID().toString();
             return SignatureRequest.builder()

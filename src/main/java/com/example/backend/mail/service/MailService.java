@@ -28,7 +28,7 @@ public class MailService {
     private final EncryptionUtil encryptionUtil;
 
 
-    public void sendSignatureRequestEmails(String senderName, String requestName ,List<SignatureRequest> requests, Integer password) throws Exception {
+    public void sendSignatureRequestEmails(String senderName, String requestName ,List<SignatureRequest> requests, String password) throws Exception {
         for (SignatureRequest request : requests) {
             String recipientEmail = request.getSignerEmail();
             String token = request.getToken();
@@ -42,7 +42,7 @@ public class MailService {
         }
     }
 
-    public void sendEmail(String requestName, String from, String to, String documentName, String description, String signatureUrl, Integer password) {
+    public void sendEmail(String requestName, String from, String to, String documentName, String description, String signatureUrl, String password) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");

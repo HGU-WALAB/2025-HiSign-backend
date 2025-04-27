@@ -11,6 +11,7 @@ import com.example.backend.member.entity.Member;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Cookie;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.regex.Pattern;
 
@@ -96,16 +98,28 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     Cookie[] cookies = request.getCookies();
     String accessToken = null;
     String refreshToken = null;
+    boolean signerTokenExists = false;
+    boolean accessTokenExists = false;
 
     if (cookies != null) {
       for (Cookie cookie : cookies) {
         if ("accessToken".equals(cookie.getName())) {
           accessToken = cookie.getValue();
+          accessTokenExists = true;
         }
         if ("refreshToken".equals(cookie.getName())) {
           refreshToken = cookie.getValue();
         }
+        if ("signerToken".equals(cookie.getName())) {
+          signerTokenExists = true;
+        }
       }
+    }
+
+    if (signerTokenExists && !accessTokenExists) {
+      log.info("🚪 signerToken 존재 + accessToken 없음: 비회원 인증 진행, 회원 인증 스킵");
+      filterChain.doFilter(request, response);
+      return;
     }
 
     try {
@@ -148,7 +162,11 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                             .level(loginMember.getLevel())
                             .build(),
                     null,
-                    Collections.singletonList(new SimpleGrantedAuthority(loginMember.getRole())));
+                    Arrays.asList(
+                            new SimpleGrantedAuthority(loginMember.getRole()),
+                            new SimpleGrantedAuthority("ROLE_SINGER")
+                    )
+            );
 
     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
