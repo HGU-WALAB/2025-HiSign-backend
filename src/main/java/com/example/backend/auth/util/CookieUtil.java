@@ -40,7 +40,7 @@ public class CookieUtil {
                 .secure(properties.isSecure())
                 .sameSite(properties.getSameSite())
                 .path("/")
-                .maxAge(properties.getRefreshTokenMaxAge())
+                .maxAge(properties.getSignerTokenMaxAge())
                 .build();
     }
 

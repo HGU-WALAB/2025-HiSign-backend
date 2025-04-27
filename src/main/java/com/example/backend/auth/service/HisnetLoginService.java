@@ -53,8 +53,9 @@ public class HisnetLoginService {
       String major2 = (String) result.get("major2");
       Integer grade = result.get("grade") != null ? Integer.parseInt(result.get("grade").toString()) : null;
       int semester = Integer.parseInt(result.get("semester").toString());
-      int level = (grade == null && major1 == null && major2 == null && semester == 0) ? 1 : 0;
-
+      //교직원인지 판단하여 권한 부여 그러나 일단은 보류
+      //int level = (grade == null && major1 == null && major2 == null && semester == 0) ? 1 : 0;
+      int level = (uniqueId.equals("21700214"))? 1:0;
       return  AuthDto.builder()
               .uniqueId(uniqueId)
               .name(name)

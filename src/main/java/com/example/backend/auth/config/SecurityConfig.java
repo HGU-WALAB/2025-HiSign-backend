@@ -2,6 +2,7 @@ package com.example.backend.auth.config;
 
 import com.example.backend.auth.filter.ExceptionHandlerFilter;
 import com.example.backend.auth.filter.JwtTokenFilter;
+import com.example.backend.auth.filter.SignerTokenFilter;
 import com.example.backend.auth.service.AuthService;
 import com.example.backend.auth.util.CookieUtil;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ public class SecurityConfig {
             .and()
             .csrf(AbstractHttpConfigurer::disable)
             .addFilterBefore(new ExceptionHandlerFilter(), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(new SignerTokenFilter(SECRET_KEY), UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(
                     new JwtTokenFilter(authService, cookieProperties, cookieUtil, SECRET_KEY),
                     UsernamePasswordAuthenticationFilter.class)
@@ -51,14 +53,17 @@ public class SecurityConfig {
             .and()
             .authorizeRequests()
             .antMatchers(
-                    "/api/auth/**",
-                    "/api/signature-requests/check",
-                    "/api/auth/signer/validate",
-                    "/api/signature-requests/complete",
                     "/api/signature-requests/reject/**",
                     "/api/signature/**",
                     "/api/documents/sign/**",
                     "/api/files/signature/upload",
+                    "/api/signature-requests/complete"
+            ).hasAnyAuthority("ROLE_SIGNER")
+
+            .antMatchers(
+                    "/api/auth/**",
+                    "/api/signature-requests/check",
+                    "/api/auth/signer/validate",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
                     "/swagger-resources/**",
@@ -81,5 +86,10 @@ public class SecurityConfig {
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", config);
     return source;
+  }
+
+  @Bean
+  public JwtTokenFilter jwtTokenFilter() {
+    return new JwtTokenFilter(authService, cookieProperties, cookieUtil, SECRET_KEY);
   }
 }
