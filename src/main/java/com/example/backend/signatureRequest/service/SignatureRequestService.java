@@ -91,4 +91,8 @@ public class SignatureRequestService {
 
         return true;
     }
+
+    public List<SignatureRequest> getSignatureRequestsByDocument(Document document) {
+        return signatureRequestRepository.findByDocument(document);
+    }
 }

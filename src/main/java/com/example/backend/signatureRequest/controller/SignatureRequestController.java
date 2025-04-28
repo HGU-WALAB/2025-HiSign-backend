@@ -7,6 +7,7 @@ import com.example.backend.mail.service.MailService;
 import com.example.backend.signature.DTO.SignatureDTO;
 import com.example.backend.signature.service.SignatureService;
 import com.example.backend.signatureRequest.DTO.SignatureRequestDTO;
+import com.example.backend.signatureRequest.DTO.SignatureRequestMailDTO;
 import com.example.backend.signatureRequest.DTO.SignerDTO;
 import com.example.backend.auth.controller.request.SignatureValidationRequest;
 import com.example.backend.signatureRequest.entity.SignatureRequest;
@@ -108,6 +109,33 @@ public class SignatureRequestController {
         }  catch (Exception e) {
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("message", "서명 요청 정보 저장 처리 중 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse.toString());
+        }
+    }
+
+    @PostMapping("/send-mail")
+    public ResponseEntity<String> sendSignatureRequestMail(@RequestBody SignatureRequestMailDTO requestDto) {
+        Document document = documentService.getDocumentById(requestDto.getDocumentId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
+
+        try {
+            List<SignatureRequest> requests = signatureRequestService.getSignatureRequestsByDocument(document);
+
+            if (requests.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("서명 요청이 존재하지 않습니다.");
+            }
+
+            mailService.sendSignatureRequestEmails(requestDto.getMemberName(), document.getRequestName(), requests, requestDto.getPassword());
+
+            return ResponseEntity.ok("서명 요청 이메일이 성공적으로 발송되었습니다.");
+        } catch (MailSendException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "이메일 전송에 실패했습니다. 이메일 주소를 확인하세요.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse.toString());
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "서명 요청 이메일 발송 중 오류가 발생했습니다.");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse.toString());
         }
     }
