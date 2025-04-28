@@ -13,6 +13,7 @@ import com.example.backend.signatureRequest.entity.SignatureRequest;
 import com.example.backend.signatureRequest.repository.SignatureRequestRepository;
 import com.example.backend.signatureRequest.service.SignatureRequestService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailSendException;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/signature-requests")
 @RequiredArgsConstructor
@@ -46,11 +48,11 @@ public class SignatureRequestController {
         List<SignatureRequest> requests = signatureRequestService.createSignatureRequests(document, requestDto.getSigners(), requestDto.getPassword());
 
         // 4. 서명 필드 저장
-        for (SignerDTO singer : requestDto.getSigners()) {
-            for (SignatureDTO signatureField : singer.getSignatureFields()) {
+        for (SignerDTO signer : requestDto.getSigners()) {
+            for (SignatureDTO signatureField : signer.getSignatureFields()) {
                 signatureService.createSignatureRegion(
                         document,
-                        singer.getEmail(),
+                        signer.getEmail(),
                         signatureField.getType(),
                         signatureField.getPosition().getPageNumber(),
                         signatureField.getPosition().getX(),
@@ -72,6 +74,40 @@ public class SignatureRequestController {
         } catch (Exception e) {
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("message", "서명 요청 처리 중 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse.toString());
+        }
+    }
+
+    @PostMapping("/store")
+    public ResponseEntity<String> storeSignatureRequest(@RequestBody SignatureRequestDTO requestDto) {
+        // 1. 문서 조회
+        Document document = documentService.getDocumentById(requestDto.getDocumentId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
+
+        try {
+            // 2. 서명 요청 생성 및 저장
+            signatureRequestService.createSignatureRequests(document, requestDto.getSigners(), requestDto.getPassword());
+
+            // 4. 서명 필드 저장
+            for (SignerDTO signer : requestDto.getSigners()) {
+                for (SignatureDTO signatureField : signer.getSignatureFields()) {
+                    signatureService.createSignatureRegion(
+                            document,
+                            signer.getEmail(),
+                            signatureField.getType(),
+                            signatureField.getPosition().getPageNumber(),
+                            signatureField.getPosition().getX(),
+                            signatureField.getPosition().getY(),
+                            signatureField.getWidth(),
+                            signatureField.getHeight()
+                    );
+                }
+            }
+
+            return ResponseEntity.ok("서명 요청이 성공적으로 생성되었습니다.");
+        }  catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "서명 요청 정보 저장 처리 중 오류가 발생했습니다.");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse.toString());
         }
     }
@@ -164,7 +200,11 @@ public class SignatureRequestController {
             }
 
             // 토큰이 유효하고 서명 요청이 대기 중이며 만료되지 않았다면 200 OK 반환
-            return ResponseEntity.ok("유효한 서명 요청입니다.");
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "유효한 서명 요청입니다.");
+            response.put("signerEmail", signatureRequest.getSignerEmail()); // 서명자 이메일 추가
+
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             // 🔹 잘못된 토큰 (복호화 실패 또는 변조됨) → 400 Bad Request
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("잘못된 요청 형식입니다.");
@@ -196,6 +236,7 @@ public class SignatureRequestController {
             return signerData;
         }).collect(Collectors.toList());
 
+        log.debug("signers: {}", signers);
         return ResponseEntity.ok(signers);
     }
 

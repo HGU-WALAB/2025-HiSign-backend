@@ -206,4 +206,20 @@ public class DocumentService {
                 .map(Document::getFileName)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
     }
+
+    public boolean requestCheckingById(Long id) {
+        Optional<Document> documentOptional = documentRepository.findById(id);
+
+        if (documentOptional.isPresent()) {
+            Document document = documentOptional.get();
+
+            document.setStatus(7);
+            document.setUpdatedAt(LocalDateTime.now());
+
+            // 문서 상태 삭제로 변경
+            documentRepository.save(document);
+            return true;
+        }
+        return false;
+    }
 }

@@ -11,5 +11,5 @@ import lombok.Setter;
 @NoArgsConstructor
 public class SignatureValidationRequest {
     private String token;  // 서명 요청 토큰 (UUID)
-    private String email;  // 사용자가 입력한 이메일
+    private String password;  // 사용자가 입력한 이메일
 }

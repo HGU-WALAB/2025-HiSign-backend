@@ -4,6 +4,7 @@ import com.example.backend.auth.dto.AuthDto;
 import com.example.backend.document.dto.DocumentDTO;
 import com.example.backend.document.entity.Document;
 import com.example.backend.document.service.DocumentService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -26,6 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/documents")
 public class DocumentController {
@@ -53,7 +55,7 @@ public class DocumentController {
             throw new IllegalStateException("사용자의 고유 ID를 찾을 수 없습니다.");
         }
 
-        System.out.println("[DEBUG] 요청한 문서 리스트 요청 - UniqueId: " + uniqueId);
+        log.debug("요청한 문서 리스트 요청 - UniqueId: {}", uniqueId);
 
         List<Map<String, Object>> documents = documentService.getDocumentsByUniqueId(uniqueId);
 
@@ -62,11 +64,8 @@ public class DocumentController {
                     .filter(doc -> doc.get("requestName").toString().toLowerCase().contains(searchQuery.toLowerCase()))
                     .collect(Collectors.toList());
         }
-
         return documents;
     }
-
-
 
     @GetMapping("/{id}")
     public ResponseEntity<Resource> getDocument(@PathVariable Long id) {
@@ -92,9 +91,9 @@ public class DocumentController {
         }
     }
 
-    @DeleteMapping("/{documentId}")
-    public ResponseEntity<String> deleteDocument(@PathVariable Long documentId) {
-        boolean deleted = documentService.deleteDocumentById(documentId);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteDocument(@PathVariable Long id) {
+        boolean deleted = documentService.deleteDocumentById(id);
         if (deleted) {
             return ResponseEntity.ok("문서 및 관련 서명 요청이 성공적으로 삭제되었습니다.");
         } else {
@@ -103,7 +102,7 @@ public class DocumentController {
         }
     }
 
-    //서명용 문서 불러오기 (필터에서 예외처리 되어있음)
+    //서명용 문서 불러오기
     @GetMapping("/sign/{id}")
     public ResponseEntity<Resource> getDocumentForSigning(@PathVariable Long id) throws UnsupportedEncodingException {
         Resource resource = documentService.loadFileAsResource(id)
@@ -133,12 +132,29 @@ public class DocumentController {
 
         String email = ((AuthDto) principal).getEmail();
 
-        System.out.println("[DEBUG] 요청받은 문서 리스트 요청 - 이메일: " + email);
+        log.debug("요청받은 문서 리스트 요청 - 이메일: {}", email);
 
         return documentService.getDocumentsWithRequesterInfoBySignerEmail(email);
     }
 
+    @GetMapping("/request-check/{id}")
+    public ResponseEntity<String> getDocumentForRequestCheck(@PathVariable Long id) {
+        boolean requested = documentService.requestCheckingById(id);
+        if (requested) {
+            return ResponseEntity.ok("문서에 대한 검토가 성공적으로 요청되었습니다.");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("해당 문서를 찾을 수 없습니다.");
+        }
+    }
 
+    @GetMapping("/{id}/title")
+    public ResponseEntity<String> getDocumentTitle(@PathVariable Long id) {
+        Document document = documentService.getDocumentById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
+
+        return ResponseEntity.ok(document.getRequestName());
+    }
 
 }
 

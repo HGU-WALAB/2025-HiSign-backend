@@ -87,8 +87,10 @@ public class AuthController {
       SignatureRequest signatureRequest = signatureRequestRepository.findByToken(decryptedToken)
               .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "잘못된 서명 요청입니다."));
 
-      if (!signatureRequest.getSignerEmail().equals(request.getEmail())) {
-        return ResponseEntity.status(401).body("이메일이 일치하지 않습니다.");
+      if (!signatureRequest.getPassword().equals(request.getPassword())) {
+        log.debug("저장된 비밀번호: {}",signatureRequest.getPassword());
+        log.debug("전달받은 비밀번호: {}",request.getPassword());
+        return ResponseEntity.status(401).body("비밀번호가 일치하지 않습니다.");
       }
 
       if (signatureRequest.getExpiredAt().isBefore(LocalDateTime.now())) {
