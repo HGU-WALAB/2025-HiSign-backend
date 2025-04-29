@@ -127,7 +127,7 @@ public class DocumentController {
 
         String email = ((AuthDto) principal).getEmail();
 
-        System.out.println("[DEBUG] 요청받은 문서 리스트 요청 - 이메일: " + email);
+        log.debug("[DEBUG] 요청받은 문서 리스트 요청 - 이메일: {}", email);
 
         List<Map<String, Object>> documents = documentService.getDocumentsWithRequesterInfoBySignerEmail(email);
 
@@ -139,8 +139,6 @@ public class DocumentController {
 
         return documents;
     }
-
-
 
     @GetMapping("/{id}")
     public ResponseEntity<Resource> getDocument(@PathVariable Long id) {
@@ -227,14 +225,6 @@ public class DocumentController {
         }
     }
 
-    @GetMapping("/{id}/title")
-    public ResponseEntity<String> getDocumentTitle(@PathVariable Long id) {
-        Document document = documentService.getDocumentById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
-
-        return ResponseEntity.ok(document.getRequestName());
-    }
-
     @PutMapping("/{documentId}/reject")
     public ResponseEntity<?> rejectDocumentReview(
             @PathVariable Long documentId,
@@ -242,15 +232,6 @@ public class DocumentController {
 
         documentService.rejectDocument(documentId, reason);
         return ResponseEntity.ok("문서가 성공적으로 반려 처리되었습니다.");
-    }
-
-    @GetMapping("/{documentId}/status")
-    public ResponseEntity<?> getDocumentStatus(@PathVariable Long documentId) {
-        Integer status = documentService.getDocumentStatus(documentId);
-        Map<String, Object> response = new HashMap<>();
-        response.put("documentId", documentId);
-        response.put("status", status);
-        return ResponseEntity.ok(response);
     }
 }
 

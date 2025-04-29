@@ -9,6 +9,7 @@ import com.example.backend.member.entity.Member;
 import com.example.backend.member.repository.MemberRepository;
 import com.example.backend.signatureRequest.repository.SignatureRequestRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DocumentService {
@@ -63,7 +65,7 @@ public class DocumentService {
         LocalDateTime now = LocalDateTime.now();
 
         if (results == null || results.isEmpty()) {
-            System.out.println("[ERROR] 요청한 문서 데이터가 존재하지 않음. uniqueId: " + uniqueId);
+            log.error("[ERROR] 요청한 문서 데이터가 존재하지 않음. uniqueId: {}", uniqueId);
             return new ArrayList<>();
         }
 
@@ -88,7 +90,7 @@ public class DocumentService {
 
                 documents.add(docMap);
             } catch (Exception e) {
-                System.out.println("[ERROR] 요청한 문서 데이터 매핑 중 오류 발생: " + e.getMessage());
+                log.error("[ERROR] 요청한 문서 데이터 매핑 중 오류 발생: {}", e.getMessage());
             }
         }
         return documents;
@@ -101,7 +103,7 @@ public class DocumentService {
         LocalDateTime now = LocalDateTime.now();
 
         if (results == null || results.isEmpty()) {
-            System.out.println("[ERROR] 문서 데이터가 존재하지 않음. email: " + email);
+            log.error("[ERROR] 문서 데이터가 존재하지 않음. email: {}", email);
             return new ArrayList<>();
         }
 
@@ -133,7 +135,7 @@ public class DocumentService {
                         String encryptedToken = encryptionUtil.encryptUUID(token);
                         docMap.put("token", encryptedToken); // 🔹 암호화된 토큰 저장
                     } catch (Exception e) {
-                        System.out.println("[ERROR] 토큰 암호화 실패: " + e.getMessage());
+                        log.error("[ERROR] 토큰 암호화 실패: {}", e.getMessage());
                         docMap.put("token", "암호화 실패");
                     }
                 } else {
@@ -143,7 +145,7 @@ public class DocumentService {
 
                 documents.add(docMap);
             } catch (Exception e) {
-                System.out.println("[ERROR] 문서 데이터 매핑 중 오류 발생: " + e.getMessage());
+                log.error("[ERROR] 문서 데이터 매핑 중 오류 발생: {}", e.getMessage());
             }
         }
         return documents;
@@ -273,11 +275,5 @@ public class DocumentService {
         document.setUpdatedAt(LocalDateTime.now());
 
         documentRepository.save(document);
-    }
-
-    public Integer getDocumentStatus(Long documentId) {
-        Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new NoSuchElementException("문서를 찾을 수 없습니다."));
-        return document.getStatus();
     }
 }
