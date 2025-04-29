@@ -263,4 +263,15 @@ public class DocumentService {
     public void save(Document document) {
         documentRepository.save(document);
     }
+
+    public void rejectDocument(Long documentId, String rejectReason) {
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 문서입니다."));
+
+        document.setReviewRejectReason(rejectReason);
+        document.setStatus(2); // 2 = 거절됨
+        document.setUpdatedAt(LocalDateTime.now());
+
+        documentRepository.save(document);
+    }
 }

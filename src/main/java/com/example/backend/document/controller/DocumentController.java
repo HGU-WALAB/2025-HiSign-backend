@@ -2,6 +2,7 @@ package com.example.backend.document.controller;
 
 import com.example.backend.auth.dto.AuthDto;
 import com.example.backend.document.dto.DocumentDTO;
+import com.example.backend.document.dto.RejectRequestDTO;
 import com.example.backend.document.dto.UploadRequestDTO;
 import com.example.backend.document.entity.Document;
 import com.example.backend.document.service.DocumentService;
@@ -240,7 +241,14 @@ public class DocumentController {
         return ResponseEntity.ok(document.getRequestName());
     }
 
+    @PutMapping("/{documentId}/reject")
+    public ResponseEntity<?> rejectDocumentReview(
+            @PathVariable Long documentId,
+            @RequestBody RejectRequestDTO rejectRequestDTO) {
 
+        documentService.rejectDocument(documentId, rejectRequestDTO.getReason());
+        return ResponseEntity.ok("문서가 성공적으로 반려 처리되었습니다.");
+    }
 }
 
 
