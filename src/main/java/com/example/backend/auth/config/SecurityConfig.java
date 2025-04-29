@@ -63,7 +63,7 @@ public class SecurityConfig {
             .antMatchers(
                     "/api/auth/**",
                     "/api/signature-requests/check",
-                    "/api/auth/signer/validate",
+                    "/api/auth/signer/**",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
                     "/swagger-resources/**",

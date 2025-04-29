@@ -135,13 +135,11 @@ public class AuthController {
     return response;
   }
 
-  @PostMapping("/signer/delete-cookie")
-  public ResponseEntity<?> logoutSigner() {
+  @GetMapping("/signer/delete-cookie")
+  public ResponseEntity<?> logoutSigner(HttpServletResponse response) {
     // 쿠키의 Max-Age를 0으로 설정하여 삭제
-    ResponseCookie deleteCookie = cookieUtil.expireAccessTokenCookie();
-
-    return ResponseEntity.ok()
-            .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
-            .body("서명자 로그아웃이 완료되었습니다.");
+    ResponseCookie deleteCookie = cookieUtil.expireSignerTokenCookie();
+    response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+    return ResponseEntity.ok().build();
   }
 }
