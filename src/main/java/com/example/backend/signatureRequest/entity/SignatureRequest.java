@@ -47,8 +47,8 @@ public class SignatureRequest {
     @Column(length = 255, nullable = true)
     private String rejectReason;
 
-    @Column(nullable = false)
-    private Integer password;
+    @Column(nullable = false, length = 5)
+    private String password;
 
     @PrePersist
     protected void onCreate() {

@@ -39,6 +39,19 @@ public class JwtUtil {
             .compact();
   }
 
+  public static String createSignerToken(String email, Long documentId, String secretKey, long expirationSeconds) {
+    Key key = JwtUtil.getSigningKey(secretKey);
+
+    return Jwts.builder()
+            .setSubject(email)
+            .claim("documentId", documentId)
+            .claim("role", "ROLE_SIGNER")
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(System.currentTimeMillis() + expirationSeconds * 1000))
+            .signWith(key)
+            .compact();
+  }
+
   public static Key getSigningKey(String secretKey) {
     byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
     return new SecretKeySpec(keyBytes, 0, keyBytes.length, "HmacSHA256");
@@ -52,7 +65,7 @@ public class JwtUtil {
     return extractClaims(token, secretKey).getSubject();
   }
 
-  private static Claims extractClaims(String token, String secretKey) {
+  public static Claims extractClaims(String token, String secretKey) {
     log.debug("토큰 검증 시도: {}", token.substring(0, Math.min(10, token.length())) + "...");
     try {
       Claims claims = Jwts.parserBuilder()

@@ -3,7 +3,6 @@ package com.example.backend.pdf.service;
 import com.example.backend.file.service.FileService;
 import com.example.backend.document.entity.Document;
 import com.example.backend.document.service.DocumentService;
-import com.example.backend.document.service.DocumentVersionService;
 import com.example.backend.signature.DTO.SignatureDTO;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Image;
@@ -15,11 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 @Service

@@ -7,11 +7,8 @@ import com.example.backend.document.repository.DocumentRepository;
 import com.example.backend.file.service.FileService;
 import com.example.backend.member.entity.Member;
 import com.example.backend.member.repository.MemberRepository;
-import com.example.backend.signature.repository.SignatureRepository;
 import com.example.backend.signatureRequest.repository.SignatureRequestRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -21,10 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,22 +33,6 @@ public class DocumentService {
 
     public Optional<Document> getDocumentById(Long documentId) {
         return documentRepository.findById(documentId);
-    }
-
-    private DocumentDTO convertToDTO(Document document) {
-        return DocumentDTO.builder()
-                .id(document.getId())
-                .fileName(document.getFileName())
-                .requestName(document.getRequestName())
-                .memberId(document.getMember().getId())
-                .savedFileName(document.getSavedFileName())
-                .createdAt(document.getCreatedAt())
-                .updatedAt(document.getUpdatedAt())
-                .status(document.getStatus())
-                .isRejectable(document.getIsRejectable())
-                .description(document.getDescription())
-                .type(document.getType())
-                .build();
     }
 
     public Document saveDocument(String requestName,MultipartFile file, String savedFileName, Member member, Integer IsRejectable, String description, Integer type) {
@@ -265,6 +244,23 @@ public class DocumentService {
         return documents;
     }
 
+    public boolean requestCheckingById(Long id) {
+        Optional<Document> documentOptional = documentRepository.findById(id);
 
+        if (documentOptional.isPresent()) {
+            Document document = documentOptional.get();
 
+            document.setStatus(7);
+            document.setUpdatedAt(LocalDateTime.now());
+
+            // 문서 상태 삭제로 변경
+            documentRepository.save(document);
+            return true;
+        }
+        return false;
+    }
+    @Transactional
+    public void save(Document document) {
+        documentRepository.save(document);
+    }
 }

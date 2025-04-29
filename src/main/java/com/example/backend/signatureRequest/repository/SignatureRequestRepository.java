@@ -1,5 +1,6 @@
 package com.example.backend.signatureRequest.repository;
 
+import com.example.backend.document.entity.Document;
 import com.example.backend.signatureRequest.entity.SignatureRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -41,4 +42,6 @@ public interface SignatureRequestRepository extends JpaRepository<SignatureReque
 
     @Query("SELECT s.rejectReason FROM SignatureRequest s WHERE s.document.id = :documentId")
     Optional<String> findRejectReasonByDocumentId(@Param("documentId") Long documentId);
+  
+    List<SignatureRequest> findByDocument(Document document);
 }

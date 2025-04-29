@@ -11,9 +11,11 @@ import com.example.backend.member.entity.Member;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -25,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Cookie;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.regex.Pattern;
 
@@ -96,16 +99,28 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     Cookie[] cookies = request.getCookies();
     String accessToken = null;
     String refreshToken = null;
+    boolean signerTokenExists = false;
+    boolean accessTokenExists = false;
 
     if (cookies != null) {
       for (Cookie cookie : cookies) {
         if ("accessToken".equals(cookie.getName())) {
           accessToken = cookie.getValue();
+          accessTokenExists = true;
         }
         if ("refreshToken".equals(cookie.getName())) {
           refreshToken = cookie.getValue();
         }
+        if ("signerToken".equals(cookie.getName())) {
+          signerTokenExists = true;
+        }
       }
+    }
+
+    if (signerTokenExists && !accessTokenExists) {
+      log.info("🚪 signerToken 존재 + accessToken 없음: 비회원 인증 진행, 회원 인증 스킵");
+      filterChain.doFilter(request, response);
+      return;
     }
 
     try {
@@ -134,7 +149,14 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         throw new DoNotLoginException();
       }
     }
-    System.out.println("User authenticated successfully.");
+    log.info("User authenticated successfully.");
+
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth != null) {
+      log.debug("✅ 최종 인증 정보 - 사용자: {}, 권한: {}", auth.getName(), auth.getAuthorities());
+    } else {
+      log.warn("❗ 최종 인증 정보가 없습니다 (Authentication = null)");
+    }
     filterChain.doFilter(request, response);
   }
 
@@ -148,10 +170,19 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                             .level(loginMember.getLevel())
                             .build(),
                     null,
-                    Collections.singletonList(new SimpleGrantedAuthority(loginMember.getRole())));
+                    Arrays.asList(
+                            new SimpleGrantedAuthority(loginMember.getRole()),
+                            new SimpleGrantedAuthority("ROLE_SIGNER")
+                    )
+            );
 
     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
+    // ✅ 인증이 완료된 직후에 사용자 권한을 로그로 찍기
+    authenticationToken.getAuthorities().forEach(authority -> {
+      log.info("🔑 로그인 완료 - 사용자 권한: {}", authority.getAuthority());
+    });
   }
 
 }

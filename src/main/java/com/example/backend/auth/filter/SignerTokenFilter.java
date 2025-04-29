@@ -1,16 +1,18 @@
 package com.example.backend.auth.filter;
 
 import com.example.backend.auth.dto.AuthDto;
-import com.example.backend.auth.util.SignerJwtUtil;
+import com.example.backend.auth.util.JwtUtil;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -30,21 +32,29 @@ public class SignerTokenFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        String authHeader = request.getHeader("Authorization");
+        Cookie[] cookies = request.getCookies();
+        String signerToken = null;
 
-        // 💡 Authorization 헤더가 없으면 비회원 인증 필터는 스킵
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("signerToken".equals(cookie.getName())) {
+                    signerToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        // ✅ signerToken이 없으면 이 필터는 아무것도 하지 않고 다음 필터로 넘긴다
+        if (signerToken == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            String jwt = authHeader.substring(7);
-            Claims claims = SignerJwtUtil.parseToken(jwt, secretKey);
+            Claims claims = JwtUtil.extractClaims(signerToken, secretKey);
 
-            // 필수 정보 검증
             if (!"ROLE_SIGNER".equals(claims.get("role"))) {
-                throw new RuntimeException("잘못된 비회원 토큰입니다.");
+                throw new RuntimeException("잘못된 서명자 토큰입니다.");
             }
 
             AuthDto signer = AuthDto.builder()
@@ -52,15 +62,22 @@ public class SignerTokenFilter extends OncePerRequestFilter {
                     .build();
 
             UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(signer, null,
-                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_SIGNER")));
+                    new UsernamePasswordAuthenticationToken(
+                            signer,
+                            null,
+                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_SIGNER"))
+                    );
 
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            // ✅ 인증이 완료된 직후에 사용자 권한을 로그로 찍기
+            authentication.getAuthorities().forEach(authority -> {
+                log.info("🔑 로그인 완료 - 사용자 권한: {}", authority.getAuthority());
+            });
         } catch (Exception e) {
-            log.warn("비회원 토큰 인증 실패: {}", e.getMessage());
+            log.warn("❌ SignerToken 인증 실패: {}", e.getMessage());
         }
 
         filterChain.doFilter(request, response);
     }
-
 }
