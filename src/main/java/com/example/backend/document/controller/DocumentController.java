@@ -218,8 +218,6 @@ public class DocumentController {
                     .filter(doc -> doc.get("requestName").toString().toLowerCase().contains(searchQuery.toLowerCase()))
                     .collect(Collectors.toList());
         }
-        log.debug("요청받은 문서 리스트 요청 - 이메일: {}", email);
-
         return ResponseEntity.ok(documents);
     }
 
