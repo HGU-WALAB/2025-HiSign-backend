@@ -1,8 +1,6 @@
 package com.example.backend.document.controller;
 
 import com.example.backend.auth.dto.AuthDto;
-import com.example.backend.document.dto.DocumentDTO;
-import com.example.backend.document.dto.RejectRequestDTO;
 import com.example.backend.document.dto.UploadRequestDTO;
 import com.example.backend.document.entity.Document;
 import com.example.backend.document.service.DocumentService;
@@ -12,8 +10,6 @@ import com.example.backend.member.service.MemberService;
 import com.example.backend.signatureRequest.service.SignatureRequestService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -29,6 +25,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -241,10 +238,19 @@ public class DocumentController {
     @PutMapping("/{documentId}/reject")
     public ResponseEntity<?> rejectDocumentReview(
             @PathVariable Long documentId,
-            @RequestBody RejectRequestDTO rejectRequestDTO) {
+            @RequestBody String reason) {
 
-        documentService.rejectDocument(documentId, rejectRequestDTO.getReason());
+        documentService.rejectDocument(documentId, reason);
         return ResponseEntity.ok("문서가 성공적으로 반려 처리되었습니다.");
+    }
+
+    @GetMapping("/{documentId}/status")
+    public ResponseEntity<?> getDocumentStatus(@PathVariable Long documentId) {
+        Integer status = documentService.getDocumentStatus(documentId);
+        Map<String, Object> response = new HashMap<>();
+        response.put("documentId", documentId);
+        response.put("status", status);
+        return ResponseEntity.ok(response);
     }
 }
 

@@ -274,4 +274,10 @@ public class DocumentService {
 
         documentRepository.save(document);
     }
+
+    public Integer getDocumentStatus(Long documentId) {
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new NoSuchElementException("문서를 찾을 수 없습니다."));
+        return document.getStatus();
+    }
 }

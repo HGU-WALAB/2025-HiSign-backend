@@ -48,7 +48,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             "/api/signature-requests/validate",
             "/api/signature-requests/complete",
             "/api/signature-requests/reject/.*",
-            "/api/signature/.*",
             "/api/documents/sign/.*",
             "/api/files/signature/upload",
             "/swagger-ui/.*",
@@ -181,7 +180,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     // ✅ 인증이 완료된 직후에 사용자 권한을 로그로 찍기
     authenticationToken.getAuthorities().forEach(authority -> {
-      log.info("🔑 로그인 완료 - 사용자 권한: {}", authority.getAuthority());
+      log.info("토큰 필터 - 🔑 로그인 완료 - 사용자 권한: {}", authority.getAuthority());
     });
   }
 

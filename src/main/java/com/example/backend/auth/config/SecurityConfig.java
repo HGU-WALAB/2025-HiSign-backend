@@ -52,9 +52,9 @@ public class SecurityConfig {
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
             .authorizeRequests()
+            .antMatchers("/api/signature/**").hasAnyAuthority("ROLE_SIGNER", "ROLE_USER", "ROLE_ADMIN")
             .antMatchers(
                     "/api/signature-requests/reject/**",
-                    "/api/signature/**",
                     "/api/documents/sign/**",
                     "/api/files/signature/upload",
                     "/api/signature-requests/complete"
