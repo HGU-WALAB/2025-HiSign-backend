@@ -121,6 +121,32 @@ public class DocumentController {
         return documents;
     }
 
+
+    @GetMapping("/received-with-requester")
+    public List<Map<String, Object>> getReceivedDocuments(@RequestParam(value = "searchQuery", required = false) String searchQuery) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (!(principal instanceof AuthDto)) {
+            throw new IllegalStateException("사용자의 이메일 정보를 찾을 수 없습니다.");
+        }
+
+        String email = ((AuthDto) principal).getEmail();
+
+        System.out.println("[DEBUG] 요청받은 문서 리스트 요청 - 이메일: " + email);
+
+        List<Map<String, Object>> documents = documentService.getDocumentsWithRequesterInfoBySignerEmail(email);
+
+        if (searchQuery != null && !searchQuery.isEmpty()) {
+            documents = documents.stream()
+                    .filter(doc -> doc.get("requestName").toString().toLowerCase().contains(searchQuery.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        return documents;
+    }
+
+
+
     @GetMapping("/{id}")
     public ResponseEntity<Resource> getDocument(@PathVariable Long id) {
         Document document = documentService.getDocumentById(id)
@@ -176,19 +202,25 @@ public class DocumentController {
                 .body(resource);
     }
 
-    @GetMapping("/received-with-requester")
-    public List<Map<String, Object>> getReceivedDocuments() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        if (!(principal instanceof AuthDto)) {
-            throw new IllegalStateException("사용자의 이메일 정보를 찾을 수 없습니다.");
+    @GetMapping("/info/{id}")
+    public ResponseEntity<Map<String, Object>> getDocumentInfo(@PathVariable Long id) {
+        Map<String, Object> documentInfo = documentService.getDocumentInfo(id);
+        return ResponseEntity.ok(documentInfo);
+    }
+
+    @GetMapping("/admin_document")
+    public ResponseEntity<List<Map<String, Object>>> getAdminDocuments(@RequestParam(value = "searchQuery", required = false) String searchQuery) {
+        List<Map<String, Object>> documents = documentService.getAllAdminDocuments();
+
+        if (searchQuery != null && !searchQuery.isEmpty()) {
+            documents = documents.stream()
+                    .filter(doc -> doc.get("requestName").toString().toLowerCase().contains(searchQuery.toLowerCase()))
+                    .collect(Collectors.toList());
         }
-
-        String email = ((AuthDto) principal).getEmail();
-
         log.debug("요청받은 문서 리스트 요청 - 이메일: {}", email);
 
-        return documentService.getDocumentsWithRequesterInfoBySignerEmail(email);
+        return ResponseEntity.ok(documents);
     }
 
     @GetMapping("/request-check/{id}")
@@ -209,6 +241,7 @@ public class DocumentController {
 
         return ResponseEntity.ok(document.getRequestName());
     }
+
 
 }
 
