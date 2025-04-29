@@ -1,10 +1,16 @@
 package com.example.backend.signatureRequest.service;
 
+import com.example.backend.document.service.DocumentService;
+import com.example.backend.mail.service.MailService;
+import com.example.backend.signature.DTO.SignatureDTO;
+import com.example.backend.signature.service.SignatureService;
 import com.example.backend.signatureRequest.DTO.SignerDTO;
 import com.example.backend.signatureRequest.entity.SignatureRequest;
 import com.example.backend.signatureRequest.repository.SignatureRequestRepository;
 import com.example.backend.document.repository.DocumentRepository;
 import com.example.backend.document.entity.Document;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,17 +20,16 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class SignatureRequestService {
 
+    private final SignatureService signatureService;
+    private final MailService mailService;
+    private final DocumentService documentService;
     private final SignatureRequestRepository signatureRequestRepository;
     private final DocumentRepository documentRepository;
-
-    public SignatureRequestService(SignatureRequestRepository signatureRequestRepository,
-                                   DocumentRepository documentRepository) {
-        this.signatureRequestRepository = signatureRequestRepository;
-        this.documentRepository = documentRepository;
-    }
 
     public List<SignatureRequest> createSignatureRequests(Document document, List<SignerDTO> signers, String password) {
         List<SignatureRequest> requests = signers.stream().map(signer -> {
@@ -95,4 +100,63 @@ public class SignatureRequestService {
     public List<SignatureRequest> getSignatureRequestsByDocument(Document document) {
         return signatureRequestRepository.findByDocument(document);
     }
+
+    @Transactional
+    public void saveSignatureRequestAndFields(Document document, List<SignerDTO> signers, String password) {
+        // 1. 서명 요청 생성
+        createSignatureRequests(document, signers, password);
+
+        // 2. 서명 필드 저장
+        for (SignerDTO signer : signers) {
+            for (SignatureDTO signatureField : signer.getSignatureFields()) {
+                signatureService.createSignatureRegion(
+                        document,
+                        signer.getEmail(),
+                        signatureField.getType(),
+                        signatureField.getPosition().getPageNumber(),
+                        signatureField.getPosition().getX(),
+                        signatureField.getPosition().getY(),
+                        signatureField.getWidth(),
+                        signatureField.getHeight()
+                );
+            }
+        }
+
+    }
+
+    @Transactional
+    public void saveRequestsAndSendMail(Document document, List<SignerDTO> signers, String password, String senderName) {
+        // 1. 문서 상태 변경
+        document.setStatus(0);
+        documentService.save(document);
+
+        // 2. 서명 요청 + 필드 저장
+        List<SignatureRequest> requests = createSignatureRequests(document, signers, password);
+
+        for (SignerDTO signer : signers) {
+            for (SignatureDTO signatureField : signer.getSignatureFields()) {
+                signatureService.createSignatureRegion(
+                        document,
+                        signer.getEmail(),
+                        signatureField.getType(),
+                        signatureField.getPosition().getPageNumber(),
+                        signatureField.getPosition().getX(),
+                        signatureField.getPosition().getY(),
+                        signatureField.getWidth(),
+                        signatureField.getHeight()
+                );
+            }
+        }
+
+        // 3. 메일 전송 (트랜잭션 안에서)
+        try {
+            mailService.sendSignatureRequestEmails(senderName, document.getRequestName(), requests, password);
+        } catch (Exception e) {
+            log.error("❌ 메일 발송 실패 - 트랜잭션 롤백", e);
+            throw new RuntimeException("메일 발송 실패로 롤백", e);
+        }
+    }
+
+
+
 }

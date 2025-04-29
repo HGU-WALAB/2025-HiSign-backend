@@ -8,5 +8,4 @@ import lombok.Setter;
 public class SignatureRequestMailDTO {
     private Long documentId;
     private String memberName;
-    private String password;
 }

@@ -9,6 +9,7 @@ import com.example.backend.auth.service.AuthService;
 import com.example.backend.auth.service.HisnetLoginService;
 import com.example.backend.auth.util.CookieUtil;
 import com.example.backend.auth.util.JwtUtil;
+import com.example.backend.document.entity.Document;
 import com.example.backend.signatureRequest.entity.SignatureRequest;
 import com.example.backend.signatureRequest.repository.SignatureRequestRepository;
 import lombok.RequiredArgsConstructor;
@@ -87,10 +88,15 @@ public class AuthController {
       SignatureRequest signatureRequest = signatureRequestRepository.findByToken(decryptedToken)
               .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "잘못된 서명 요청입니다."));
 
-      if (!signatureRequest.getPassword().equals(request.getPassword())) {
-        log.debug("저장된 비밀번호: {}",signatureRequest.getPassword());
-        log.debug("전달받은 비밀번호: {}",request.getPassword());
-        return ResponseEntity.status(401).body("비밀번호가 일치하지 않습니다.");
+      // ✅ "NONE"이면 비밀번호 검증을 건너뜀
+      if (!"NONE".equals(request.getPassword())) {
+        if (!signatureRequest.getPassword().equals(request.getPassword())) {
+          log.debug("저장된 비밀번호: {}", signatureRequest.getPassword());
+          log.debug("전달받은 비밀번호: {}", request.getPassword());
+          return ResponseEntity.status(401).body("비밀번호가 일치하지 않습니다.");
+        }
+      } else {
+        log.info("✅ 전달받은 비밀번호가 NONE입니다. 비밀번호 검증을 생략합니다.");
       }
 
       if (signatureRequest.getExpiredAt().isBefore(LocalDateTime.now())) {
@@ -106,10 +112,7 @@ public class AuthController {
 
       ResponseCookie signerCookie = cookieUtil.createSignerTokenCookie(jwt);
 
-      Map<String, Object> response = new HashMap<>();
-      response.put("documentId", signatureRequest.getDocument().getId());
-      response.put("documentName", signatureRequest.getDocument().getFileName());
-      response.put("signerName", signatureRequest.getSignerName());
+      Map<String, Object> response = getResponse(signatureRequest);
 
       return ResponseEntity.ok()
               .header(HttpHeaders.SET_COOKIE, signerCookie.toString())
@@ -118,5 +121,17 @@ public class AuthController {
     } catch (Exception e) {
       return ResponseEntity.status(500).body("서명 인증 중 오류가 발생했습니다.");
     }
+  }
+
+  private static Map<String, Object> getResponse(SignatureRequest signatureRequest) {
+    Map<String, Object> response = new HashMap<>();
+    response.put("documentId", signatureRequest.getDocument().getId());
+    response.put("documentName", signatureRequest.getDocument().getFileName());
+    response.put("signerName", signatureRequest.getSignerName());
+    response.put("requesterName", signatureRequest.getDocument().getMember().getName());
+    response.put("requestName", signatureRequest.getDocument().getRequestName());
+    response.put("description", signatureRequest.getDocument().getDescription());
+    response.put("isRejectable", signatureRequest.getDocument().getIsRejectable());
+    return response;
   }
 }

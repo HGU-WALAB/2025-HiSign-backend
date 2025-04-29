@@ -30,37 +30,6 @@ public class FileController {
         this.memberService = memberService;
     }
 
-    @PostMapping("/document/upload")
-    public ResponseEntity<?> uploadDocumentFile(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("unique_id") String uniqueId,
-            @RequestParam("request_name") String requestName,
-            @RequestParam("is_rejectable") Integer isRejectable,
-            @RequestParam("description") String description,
-            @RequestParam("type") Integer type
-    ) {
-        try {
-            // 🔹 1. 유저 조회 (유효성 검사)
-            Member member = memberService.findByUniqueId(uniqueId);
-            if (member == null) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "해당 unique_id를 가진 사용자가 없습니다."));
-            }
-
-            // 🔹 2. 파일 저장 (파일 저장이 성공해야만 DB 저장)
-            String storedFileName = fileService.storeFile(file, "DOCUMENT");
-
-            // 🔹 3. 문서 정보 저장 (파일 저장이 성공한 경우만)
-            Document document = documentService.saveDocument(requestName, file, storedFileName, member,isRejectable, description, type);
-
-            return ResponseEntity.ok(Collections.singletonMap("documentId", document.getId()));
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Collections.singletonMap("error", "알 수 없는 오류가 발생했습니다."));
-        }
-    }
-
     @PostMapping("/signature/upload")
     public ResponseEntity<Map<String, String>> uploadSignatureFile(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
