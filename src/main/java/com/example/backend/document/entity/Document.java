@@ -54,5 +54,7 @@ public class Document {
     @Column(nullable = false, columnDefinition = "TINYINT")
     private Integer type; // 0: 기본 1: TA 근무일지
 
+    @Column(length = 255, nullable = true)
+    private String reviewRejectReason;
 }
 

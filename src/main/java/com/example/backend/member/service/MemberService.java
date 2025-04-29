@@ -4,6 +4,7 @@ import com.example.backend.member.DTO.SearchMemberDTO;
 import com.example.backend.member.entity.Member;
 import com.example.backend.member.repository.MemberRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,6 +17,7 @@ public class MemberService {
         this.memberRepository = memberRepository;
     }
 
+    @Transactional(readOnly = true)
     public Member findByUniqueId(String uniqueId) {
         return (Member) memberRepository.findByUniqueId(uniqueId)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found with uniqueId: " + uniqueId));

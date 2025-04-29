@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -148,7 +149,14 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         throw new DoNotLoginException();
       }
     }
-    System.out.println("User authenticated successfully.");
+    log.info("User authenticated successfully.");
+
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth != null) {
+      log.debug("✅ 최종 인증 정보 - 사용자: {}, 권한: {}", auth.getName(), auth.getAuthorities());
+    } else {
+      log.warn("❗ 최종 인증 정보가 없습니다 (Authentication = null)");
+    }
     filterChain.doFilter(request, response);
   }
 
@@ -164,12 +172,17 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                     null,
                     Arrays.asList(
                             new SimpleGrantedAuthority(loginMember.getRole()),
-                            new SimpleGrantedAuthority("ROLE_SINGER")
+                            new SimpleGrantedAuthority("ROLE_SIGNER")
                     )
             );
 
     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
+    // ✅ 인증이 완료된 직후에 사용자 권한을 로그로 찍기
+    authenticationToken.getAuthorities().forEach(authority -> {
+      log.info("🔑 로그인 완료 - 사용자 권한: {}", authority.getAuthority());
+    });
   }
 
 }

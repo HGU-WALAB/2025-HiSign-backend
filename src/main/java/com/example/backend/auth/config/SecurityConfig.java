@@ -70,7 +70,7 @@ public class SecurityConfig {
                     "/webjars/**",
                     "/swagger-ui.html"
             ).permitAll()
-            .antMatchers("/api/files/**", "/api/documents/**").authenticated();
+            .antMatchers("/api/files/**", "/api/documents/**", "/api/signature-requests/send-mail").authenticated();
     return http.build();
   }
 
