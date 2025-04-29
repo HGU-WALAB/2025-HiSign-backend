@@ -38,4 +38,7 @@ public interface SignatureRequestRepository extends JpaRepository<SignatureReque
             "LEFT JOIN Signature s ON sr.document.id = s.document.id AND sr.signerEmail = s.signerEmail " +
             "WHERE sr.document.id = :documentId")
     List<Object[]> findSignerInfoWithSignedAt(@Param("documentId") Long documentId);
+
+    @Query("SELECT s.rejectReason FROM SignatureRequest s WHERE s.document.id = :documentId")
+    Optional<String> findRejectReasonByDocumentId(@Param("documentId") Long documentId);
 }

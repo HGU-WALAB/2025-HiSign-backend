@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 
 public interface DocumentRepository extends JpaRepository<Document, Long> {
     List<Document> findByMember_UniqueId(String uniqueId);
@@ -28,6 +29,15 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
             "JOIN SignatureRequest s ON d.id = s.document.id " +
             "WHERE s.signerEmail = :email")
     List<Object[]> findDocumentsBySignerEmailWithRequester(@Param("email") String email);
+
+    @Query("SELECT DISTINCT d.id, d.fileName, d.createdAt, d.status, m.name, d.requestName, s.expiredAt, d.isRejectable " +
+            "FROM Document d " +
+            "JOIN d.member m " +
+            "JOIN SignatureRequest s ON d.id = s.document.id " +
+            "WHERE d.type = 1")
+    List<Object[]> findAllDocumentsWhereTypeIsOne();
+
+
 
     @Modifying
     @Transactional

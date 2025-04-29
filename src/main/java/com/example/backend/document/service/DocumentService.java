@@ -78,6 +78,7 @@ public class DocumentService {
         return documentRepository.save(document);
     }
 
+    //요청한 문서 정보 API
     public List<Map<String, Object>> getDocumentsByUniqueId(String uniqueId) {
         List<Object[]> results = documentRepository.findDocumentsWithExpiration(uniqueId);
         LocalDateTime now = LocalDateTime.now();
@@ -94,7 +95,6 @@ public class DocumentService {
                 Long docId = (Long) result[0];
                 Integer status = (Integer) result[3];
                 LocalDateTime expiredAt = result[5] != null ? (LocalDateTime) result[5] : null;
-
                 if (expiredAt != null && expiredAt.isBefore(now) && status == 0) {
                     documentRepository.updateDocumentStatusToExpired(docId);
                     status = 4;
@@ -115,6 +115,7 @@ public class DocumentService {
         return documents;
     }
 
+    //요청 받은 문서 정보 API
     @Transactional
     public List<Map<String, Object>> getDocumentsWithRequesterInfoBySignerEmail(String email) {
         List<Object[]> results = documentRepository.findDocumentsBySignerEmailWithRequester(email);
@@ -132,6 +133,7 @@ public class DocumentService {
                 Long docId = (Long) result[0];
                 Integer status = (Integer) result[3];
                 LocalDateTime expiredAt = result[6] != null ? (LocalDateTime) result[6] : null;
+                Integer type = (Integer) result[8];
 
                 if (expiredAt != null && expiredAt.isBefore(now) && status == 0) {
                     documentRepository.updateDocumentStatusToExpired(docId);
@@ -146,6 +148,7 @@ public class DocumentService {
                 docMap.put("requestName", result[5] != null ? result[5] : "작업명 없음");
                 docMap.put("expiredAt", expiredAt != null ? expiredAt : "미설정");
                 String token = result.length > 6 ? (String) result[7] : null;
+                docMap.put("type", result[8]);
                 if (token != null) {
                     try {
                         String encryptedToken = encryptionUtil.encryptUUID(token);
@@ -206,4 +209,62 @@ public class DocumentService {
                 .map(Document::getFileName)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
     }
+
+    //문서 디테일 페이지 상세 정보 API
+    public Map<String, Object> getDocumentInfo(Long documentId) {
+        Optional<Document> documentOpt = documentRepository.findById(documentId);
+
+        if (documentOpt.isPresent()) {
+            Document document = documentOpt.get();
+            Map<String, Object> documentDetails = new HashMap<>();
+
+            String requesterName = document.getMember().getName();
+
+            String rejectReason = signatureRequestRepository
+                    .findRejectReasonByDocumentId(documentId)
+                    .orElse("없음");
+
+            LocalDateTime createdAt = document.getCreatedAt();
+
+            String fileName = document.getFileName();
+            String requestName = document.getRequestName();
+
+            Integer status = document.getStatus();
+
+            documentDetails.put("requesterName", requesterName);
+            documentDetails.put("rejectReason", rejectReason);
+            documentDetails.put("createdAt", createdAt);
+            documentDetails.put("fileName", fileName);
+            documentDetails.put("requestName", requestName);
+            documentDetails.put("status", status);
+
+            return documentDetails;
+        }
+
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "문서 정보를 찾을 수 없습니다.");
+    }
+
+    public List<Map<String, Object>> getAllAdminDocuments() {
+        List<Object[]> results = documentRepository.findAllDocumentsWhereTypeIsOne();
+
+        List<Map<String, Object>> documents = new ArrayList<>();
+        for (Object[] result : results) {
+            Map<String, Object> docMap = new HashMap<>();
+            docMap.put("id", result[0]);
+            docMap.put("fileName", result[1]);
+            docMap.put("createdAt", result[2]);
+            docMap.put("status", result[3]);
+            docMap.put("requesterName", result[4] != null ? result[4] : "알 수 없음");
+            docMap.put("requestName", result[5] != null ? result[5] : "작업명 없음");
+            docMap.put("expiredAt", result[6] != null ? result[6] : "미설정");
+            docMap.put("isRejectable", result[7] != null ? result[7] : "0");
+
+            documents.add(docMap);
+        }
+
+        return documents;
+    }
+
+
+
 }
