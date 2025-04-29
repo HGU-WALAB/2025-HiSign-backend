@@ -63,12 +63,10 @@ public class MailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            // 이메일 기본 설정
             helper.setTo(to);
             helper.setSubject("[서명 요청] " + requestName);
-            helper.setFrom(emailAdress);
+            helper.setFrom(emailAdress); // your sender email
 
-            // ✅ 비밀번호 블록 생성 (password가 있을 때만)
             String passwordBlock = "";
             if (password != null && !"NONE".equals(password)) {
                 passwordBlock =
@@ -78,7 +76,6 @@ public class MailService {
                                 + "</div>";
             }
 
-            // ✅ 최종 이메일 내용
             String emailContent = "<!DOCTYPE html>"
                     + "<html lang='ko'>"
                     + "<head>"
@@ -102,19 +99,14 @@ public class MailService {
                     + "<p style='font-size:16px; color:#333;'>안녕하세요, 사랑 · 겸손 · 봉사 정신의 한동대학교 전자 서명 서비스 <b>HISign</b>입니다.</p>"
                     + "<p style='font-size:16px; color:#333;'><b>" + from + "</b>님으로부터 <b>'" + documentName + "'</b> 문서의 서명 요청이 도착하였습니다.</p>"
                     + "<p style='font-size:16px; color:#333;'>아래 링크를 클릭하여 서명을 진행해 주세요.</p>"
-
-// ✅ passwordBlock 삽입 (만약 있을 경우)
                     + passwordBlock
-
                     + "<div class='request-block'>"
                     + "<p style='font-size:16px; font-weight:bold; color:#0366d6;'>📌 요청사항:</p>"
                     + "<p style='font-size:16px; color:#333; font-style:italic; font-weight:bold;'>" + description + "</p>"
                     + "</div>"
-
                     + "<div style='text-align:center;'>"
-                    + "<a href='" + signatureUrl + "' class='btn' style='color: #ffffff;>서명하기</a>"
+                    + "<a href='" + signatureUrl + "' class='btn' style='color: #ffffff;'>서명하기</a>"
                     + "</div>"
-
                     + "<p style='font-size:14px; color:#666; text-align:center;'>※ 본 메일은 자동 발송되었으며 회신이 불가능합니다.</p>"
                     + "</div>"
                     + "</body>"
@@ -126,6 +118,7 @@ public class MailService {
             throw new RuntimeException("이메일 전송 실패: " + e.getMessage(), e);
         }
     }
+
 
     public void sendCompletedSignatureMail(String recipientEmail, Document document, byte[] pdfData) {
         try {

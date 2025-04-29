@@ -1,7 +1,6 @@
 package com.example.backend.document.controller;
 
 import com.example.backend.auth.dto.AuthDto;
-import com.example.backend.document.dto.DocumentDTO;
 import com.example.backend.document.dto.UploadRequestDTO;
 import com.example.backend.document.entity.Document;
 import com.example.backend.document.service.DocumentService;
@@ -11,8 +10,6 @@ import com.example.backend.member.service.MemberService;
 import com.example.backend.signatureRequest.service.SignatureRequestService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,13 +24,11 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -132,7 +127,7 @@ public class DocumentController {
 
         String email = ((AuthDto) principal).getEmail();
 
-        System.out.println("[DEBUG] 요청받은 문서 리스트 요청 - 이메일: " + email);
+        log.debug("[DEBUG] 요청받은 문서 리스트 요청 - 이메일: {}", email);
 
         List<Map<String, Object>> documents = documentService.getDocumentsWithRequesterInfoBySignerEmail(email);
 
@@ -144,8 +139,6 @@ public class DocumentController {
 
         return documents;
     }
-
-
 
     @GetMapping("/{id}")
     public ResponseEntity<Resource> getDocument(@PathVariable Long id) {
@@ -232,15 +225,14 @@ public class DocumentController {
         }
     }
 
-    @GetMapping("/{id}/title")
-    public ResponseEntity<String> getDocumentTitle(@PathVariable Long id) {
-        Document document = documentService.getDocumentById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
+    @PutMapping("/{documentId}/reject")
+    public ResponseEntity<?> rejectDocumentReview(
+            @PathVariable Long documentId,
+            @RequestBody String reason) {
 
-        return ResponseEntity.ok(document.getRequestName());
+        documentService.rejectDocument(documentId, reason);
+        return ResponseEntity.ok("문서가 성공적으로 반려 처리되었습니다.");
     }
-
-
 }
 
 

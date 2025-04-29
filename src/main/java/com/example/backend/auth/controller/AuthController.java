@@ -134,4 +134,12 @@ public class AuthController {
     response.put("isRejectable", signatureRequest.getDocument().getIsRejectable());
     return response;
   }
+
+  @GetMapping("/signer/delete-cookie")
+  public ResponseEntity<?> logoutSigner(HttpServletResponse response) {
+    // 쿠키의 Max-Age를 0으로 설정하여 삭제
+    ResponseCookie deleteCookie = cookieUtil.expireSignerTokenCookie();
+    response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+    return ResponseEntity.ok().build();
+  }
 }
