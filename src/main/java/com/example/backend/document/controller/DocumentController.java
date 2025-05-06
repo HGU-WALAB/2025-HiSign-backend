@@ -252,12 +252,12 @@ public class DocumentController {
             byte[] pdfData = pdfService.generateSignedDocument(id, signatures);
             String fileName = document.getFileName();
 
+            String encodedFileName = URLEncoder.encode(fileName, "UTF-8")
+                    .replaceAll("\\+", "%20");
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDisposition(ContentDisposition
-                    .attachment()
-                    .filename(fileName)
-                    .build());
+            headers.set("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFileName);
 
             return new ResponseEntity<>(pdfData, headers, HttpStatus.OK);
         }catch (Exception e) {
@@ -278,7 +278,7 @@ public class DocumentController {
                 List<SignatureDTO> signatures = signatureService.getSignaturesForDocument(id);
                 byte[] pdfData = pdfService.generateSignedDocument(id, signatures);
 
-                String fileName = document.getFileName();
+                String fileName = document.getRequestName();
                 if (!fileName.toLowerCase().endsWith(".pdf")) {
                     fileName += ".pdf";
                 }
