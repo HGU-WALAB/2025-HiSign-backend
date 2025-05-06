@@ -7,13 +7,14 @@ import com.example.backend.document.service.DocumentService;
 import com.example.backend.file.service.FileService;
 import com.example.backend.member.entity.Member;
 import com.example.backend.member.service.MemberService;
+import com.example.backend.signature.DTO.SignatureDTO;
+import com.example.backend.signature.service.SignatureService;
 import com.example.backend.signatureRequest.service.SignatureRequestService;
+import com.example.backend.pdf.service.PdfService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -30,6 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
 
 @Slf4j
 @RestController
@@ -41,6 +46,8 @@ public class DocumentController {
     private final DocumentService documentService;
     private final MemberService memberService;
     private final SignatureRequestService signatureRequestService;
+    private final SignatureService signatureService;
+    private final PdfService pdfService;
 
 
     @PostMapping(value = "/full-upload", consumes = {"multipart/form-data"})
@@ -233,6 +240,71 @@ public class DocumentController {
         documentService.rejectDocument(documentId, reason);
         return ResponseEntity.ok("문서가 성공적으로 반려 처리되었습니다.");
     }
+
+    @GetMapping("/{id}/download")
+    public ResponseEntity<byte[]> downloadDocument(@PathVariable Long id) {
+        Document document = documentService.getDocumentById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
+        try{
+            List<SignatureDTO> signatures = signatureService.getSignaturesForDocument(id);
+
+            // ✅ 5. PDF 생성
+            byte[] pdfData = pdfService.generateSignedDocument(id, signatures);
+            String fileName = document.getFileName();
+
+            String encodedFileName = URLEncoder.encode(fileName, "UTF-8")
+                    .replaceAll("\\+", "%20");
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.set("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFileName);
+
+            return new ResponseEntity<>(pdfData, headers, HttpStatus.OK);
+        }catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "서명된 문서 다운로드 실패", e);
+        }
+    }
+
+    @PostMapping("/download/zip")
+    public ResponseEntity<byte[]> downloadDocumentsAsZip(@RequestBody List<Long> documentIds) {
+        try {
+            ByteArrayOutputStream zipBaos = new ByteArrayOutputStream();
+            ZipOutputStream zipOut = new ZipOutputStream(zipBaos);
+
+            for (Long id : documentIds) {
+                Document document = documentService.getDocumentById(id)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
+
+                List<SignatureDTO> signatures = signatureService.getSignaturesForDocument(id);
+                byte[] pdfData = pdfService.generateSignedDocument(id, signatures);
+
+                String fileName = document.getRequestName();
+                if (!fileName.toLowerCase().endsWith(".pdf")) {
+                    fileName += ".pdf";
+                }
+
+                // ZIP에 엔트리 추가
+                zipOut.putNextEntry(new ZipEntry(fileName));
+                zipOut.write(pdfData);
+                zipOut.closeEntry();
+            }
+
+            zipOut.close();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            headers.setContentDisposition(ContentDisposition
+                    .attachment()
+                    .filename("documents.zip")
+                    .build());
+
+            return new ResponseEntity<>(zipBaos.toByteArray(), headers, HttpStatus.OK);
+
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "ZIP 압축 중 오류 발생", e);
+        }
+    }
+
 }
 
 
