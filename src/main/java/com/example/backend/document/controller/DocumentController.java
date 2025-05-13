@@ -56,6 +56,8 @@ public class DocumentController {
             @RequestParam("file") MultipartFile file,
             @RequestPart("dto") UploadRequestDTO dto
     ) {
+        log.info("📥 fullUpload 요청 수신 - uniqueId: {}", dto.getUniqueId());
+        log.info("📦 파일 이름: {}", file.getOriginalFilename());
         try {
             // 1. 파일 저장
             String storedFileName = fileService.storeFile(file, "DOCUMENT");
@@ -90,6 +92,9 @@ public class DocumentController {
 
             return ResponseEntity.ok("문서 업로드 및 서명 요청이 성공적으로 처리되었습니다.");
 
+        } catch (IllegalArgumentException e) {
+            log.warn("사용자 조회 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
             log.error("❌ fullUpload 실패", e);
             throw new RuntimeException("fullUpload 처리 중 오류 발생: " + e.getMessage(), e);
