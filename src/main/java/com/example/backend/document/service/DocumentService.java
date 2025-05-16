@@ -205,6 +205,8 @@ public class DocumentService {
                     .findRejectReasonByDocumentId(documentId)
                     .orElse("없음");
 
+            String reviewRejectReason = document.getReviewRejectReason();
+
             LocalDateTime createdAt = document.getCreatedAt();
 
             String fileName = document.getFileName();
@@ -217,6 +219,7 @@ public class DocumentService {
             documentDetails.put("createdAt", createdAt);
             documentDetails.put("fileName", fileName);
             documentDetails.put("requestName", requestName);
+            documentDetails.put("reviewRejectReason", reviewRejectReason);
             documentDetails.put("status", status);
 
             return documentDetails;

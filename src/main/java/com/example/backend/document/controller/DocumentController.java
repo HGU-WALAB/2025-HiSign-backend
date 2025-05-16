@@ -240,8 +240,9 @@ public class DocumentController {
     @PutMapping("/{documentId}/reject")
     public ResponseEntity<?> rejectDocumentReview(
             @PathVariable Long documentId,
-            @RequestBody String reason) {
+            @RequestBody  Map<String, String> body) {
 
+        String reason = body.get("reason");
         documentService.rejectDocument(documentId, reason);
         return ResponseEntity.ok("문서가 성공적으로 반려 처리되었습니다.");
     }
