@@ -205,6 +205,7 @@ public class DocumentService {
                     .orElse("없음");
 
             String reviewRejectReason = document.getReviewRejectReason();
+            String cancelReason = document.getCancelReason() != null ? document.getCancelReason() : "없음";
 
             LocalDateTime createdAt = document.getCreatedAt();
 
@@ -220,6 +221,7 @@ public class DocumentService {
             documentDetails.put("requestName", requestName);
             documentDetails.put("reviewRejectReason", reviewRejectReason);
             documentDetails.put("status", status);
+            documentDetails.put("cancelReason", cancelReason);
 
             return documentDetails;
         }
