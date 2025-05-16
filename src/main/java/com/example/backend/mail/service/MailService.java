@@ -30,35 +30,26 @@ public class MailService {
     private final JavaMailSender mailSender;
     private final EncryptionUtil encryptionUtil;
 
+    private void sendSignatureRequestEmail(SignatureRequest request, String senderName, String requestName, String password) throws Exception {
+        String recipientEmail = request.getSignerEmail();
+        String token = request.getToken();
+        String documentName = request.getDocument().getFileName();
+        String description = request.getDocument().getDescription();
+        String formattedDeadline = request.getExpiredAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 (E) a h시 mm분"));
+        String encryptedToken = encryptionUtil.encryptUUID(token);
+        String signatureUrl = client + "/hisign" + "/checkEmail?token=" + encryptedToken;
 
-    public void sendSignatureRequestEmails(String senderName, String requestName ,List<SignatureRequest> requests, String password) throws Exception {
+        sendEmail(requestName, senderName, recipientEmail, documentName, description, signatureUrl, password, formattedDeadline);
+    }
+
+    public void sendSignatureRequestEmails(String senderName, String requestName, List<SignatureRequest> requests, String password) throws Exception {
         for (SignatureRequest request : requests) {
-            String recipientEmail = request.getSignerEmail();
-            String token = request.getToken();
-            String documentName = request.getDocument().getFileName();
-            String description = request.getDocument().getDescription();
-            String formattedDeadline = request.getExpiredAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 (E) a h시 mm분"));
-            String encryptedToken = encryptionUtil.encryptUUID(token);
-            //배포되었을 시에 서명 url에 basename "/hisign"이 추가되어야함
-            String signatureUrl =  client +"/hisign"+ "/checkEmail?token=" + encryptedToken;
-
-            sendEmail(requestName, senderName ,recipientEmail, documentName, description, signatureUrl,password,formattedDeadline);
+            sendSignatureRequestEmail(request, senderName, requestName, password);
         }
     }
 
-    public void sendSignatureRequestEmailsWithoutPassword (String senderName, String requestName ,List<SignatureRequest> requests) throws Exception {
-        for (SignatureRequest request : requests) {
-            String recipientEmail = request.getSignerEmail();
-            String token = request.getToken();
-            String documentName = request.getDocument().getFileName();
-            String description = request.getDocument().getDescription();
-            String formattedDeadline = request.getExpiredAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 (E) a h시 mm분"));
-            String encryptedToken = encryptionUtil.encryptUUID(token);
-            //배포되었을 시에 서명 url에 basename "/hisign"이 추가되어야함
-            String signatureUrl =  client +"/hisign"+ "/checkEmail?token=" + encryptedToken;
-
-            sendEmail(requestName, senderName ,recipientEmail, documentName, description, signatureUrl,"NONE",formattedDeadline);
-        }
+    public void sendSignatureRequestEmailsWithoutPassword(String senderName, String requestName, List<SignatureRequest> requests) throws Exception {
+        sendSignatureRequestEmails(senderName, requestName, requests, "NONE");
     }
 
     public void sendEmail(String requestName, String from, String to, String documentName, String description, String signatureUrl, String password, String deadline) {
