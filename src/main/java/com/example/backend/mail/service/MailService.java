@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,11 +37,12 @@ public class MailService {
             String token = request.getToken();
             String documentName = request.getDocument().getFileName();
             String description = request.getDocument().getDescription();
+            String formattedDeadline = request.getExpiredAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 (E) a h시 mm분"));
             String encryptedToken = encryptionUtil.encryptUUID(token);
             //배포되었을 시에 서명 url에 basename "/hisign"이 추가되어야함
             String signatureUrl =  client +"/hisign"+ "/checkEmail?token=" + encryptedToken;
 
-            sendEmail(requestName, senderName ,recipientEmail, documentName, description, signatureUrl,password);
+            sendEmail(requestName, senderName ,recipientEmail, documentName, description, signatureUrl,password,formattedDeadline);
         }
     }
 
@@ -50,15 +52,16 @@ public class MailService {
             String token = request.getToken();
             String documentName = request.getDocument().getFileName();
             String description = request.getDocument().getDescription();
+            String formattedDeadline = request.getExpiredAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 (E) a h시 mm분"));
             String encryptedToken = encryptionUtil.encryptUUID(token);
             //배포되었을 시에 서명 url에 basename "/hisign"이 추가되어야함
             String signatureUrl =  client +"/hisign"+ "/checkEmail?token=" + encryptedToken;
 
-            sendEmail(requestName, senderName ,recipientEmail, documentName, description, signatureUrl,"NONE");
+            sendEmail(requestName, senderName ,recipientEmail, documentName, description, signatureUrl,"NONE",formattedDeadline);
         }
     }
 
-    public void sendEmail(String requestName, String from, String to, String documentName, String description, String signatureUrl, String password) {
+    public void sendEmail(String requestName, String from, String to, String documentName, String description, String signatureUrl, String password, String deadline) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -98,6 +101,7 @@ public class MailService {
                     + "<h2 style='color:#0366d6; text-align:center;'>HISign 전자 서명 요청</h2>"
                     + "<p style='font-size:16px; color:#333;'>안녕하세요, 사랑 · 겸손 · 봉사 정신의 한동대학교 전자 서명 서비스 <b>HISign</b>입니다.</p>"
                     + "<p style='font-size:16px; color:#333;'><b>" + from + "</b>님으로부터 <b>'" + documentName + "'</b> 문서의 서명 요청이 도착하였습니다.</p>"
+                    + "<p style='font-size:16px; color:#d9534f;'><b>⏰ 마감 기한: </b>" + deadline + "</p>"
                     + "<p style='font-size:16px; color:#333;'>아래 링크를 클릭하여 서명을 진행해 주세요.</p>"
                     + passwordBlock
                     + "<div class='request-block'>"
