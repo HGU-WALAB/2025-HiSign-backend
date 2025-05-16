@@ -114,7 +114,6 @@ public class DocumentService {
                 Long docId = (Long) result[0];
                 Integer status = (Integer) result[3];
                 LocalDateTime expiredAt = result[6] != null ? (LocalDateTime) result[6] : null;
-                Integer type = (Integer) result[8];
 
                 if (expiredAt != null && expiredAt.isBefore(now) && status == 0) {
                     documentRepository.updateDocumentStatusToExpired(docId);
@@ -128,8 +127,7 @@ public class DocumentService {
                 docMap.put("requesterName", result[4] != null ? result[4] : "알 수 없음");
                 docMap.put("requestName", result[5] != null ? result[5] : "작업명 없음");
                 docMap.put("expiredAt", expiredAt != null ? expiredAt : "미설정");
-                String token = result.length > 6 ? (String) result[7] : null;
-                docMap.put("type", result[8]);
+                String token = (String) result[7];
                 if (token != null) {
                     try {
                         String encryptedToken = encryptionUtil.encryptUUID(token);
@@ -142,6 +140,7 @@ public class DocumentService {
                     docMap.put("token", "토큰 없음");
                 }
                 docMap.put("isRejectable", result[8] != null ? result[8] : "0");
+                docMap.put("signStatus", result[9] != null ? result[9] : 0);
 
                 documents.add(docMap);
             } catch (Exception e) {
@@ -205,6 +204,8 @@ public class DocumentService {
                     .findRejectReasonByDocumentId(documentId)
                     .orElse("없음");
 
+            String reviewRejectReason = document.getReviewRejectReason();
+
             LocalDateTime createdAt = document.getCreatedAt();
 
             String fileName = document.getFileName();
@@ -217,6 +218,7 @@ public class DocumentService {
             documentDetails.put("createdAt", createdAt);
             documentDetails.put("fileName", fileName);
             documentDetails.put("requestName", requestName);
+            documentDetails.put("reviewRejectReason", reviewRejectReason);
             documentDetails.put("status", status);
 
             return documentDetails;

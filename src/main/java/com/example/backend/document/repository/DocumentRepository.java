@@ -23,7 +23,7 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
             "WHERE d.member.uniqueId = :uniqueId")
     List<Object[]> findDocumentsWithExpiration(@Param("uniqueId") String uniqueId);
 
-    @Query("SELECT DISTINCT d.id, d.fileName, d.createdAt, d.status, m.name, d.requestName, s.expiredAt, s.token, d.isRejectable " +
+    @Query("SELECT DISTINCT d.id, d.fileName, d.createdAt, d.status, m.name, d.requestName, s.expiredAt, s.token, d.isRejectable, s.status " +
             "FROM Document d " +
             "JOIN d.member m " +
             "JOIN SignatureRequest s ON d.id = s.document.id " +
