@@ -276,6 +276,7 @@ public class DocumentController {
         try {
             ByteArrayOutputStream zipBaos = new ByteArrayOutputStream();
             ZipOutputStream zipOut = new ZipOutputStream(zipBaos);
+            Map<String, Integer> fileNameCount = new HashMap<>();
 
             for (Long id : documentIds) {
                 Document document = documentService.getDocumentById(id)
@@ -284,13 +285,29 @@ public class DocumentController {
                 List<SignatureDTO> signatures = signatureService.getSignaturesForDocument(id);
                 byte[] pdfData = pdfService.generateSignedDocument(id, signatures);
 
-                String fileName = document.getRequestName();
-                if (!fileName.toLowerCase().endsWith(".pdf")) {
-                    fileName += ".pdf";
+                String baseName  = document.getRequestName();
+                if (!baseName .toLowerCase().endsWith(".pdf")) {
+                    baseName  += ".pdf";
+                }
+
+                // 중복 처리
+                String finalName = baseName;
+                if (fileNameCount.containsKey(baseName)) {
+                    int count = fileNameCount.get(baseName) + 1;
+                    fileNameCount.put(baseName, count);
+
+                    // 파일명 확장자 분리 후 (1), (2) 붙이기
+                    int dotIndex = baseName.lastIndexOf('.');
+                    String nameOnly = baseName.substring(0, dotIndex);
+                    String ext = baseName.substring(dotIndex);
+
+                    finalName = nameOnly + " (" + count + ")" + ext;
+                } else {
+                    fileNameCount.put(baseName, 0); // 첫 등장 기록
                 }
 
                 // ZIP에 엔트리 추가
-                zipOut.putNextEntry(new ZipEntry(fileName));
+                zipOut.putNextEntry(new ZipEntry(finalName));
                 zipOut.write(pdfData);
                 zipOut.closeEntry();
             }
