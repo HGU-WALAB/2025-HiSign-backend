@@ -5,6 +5,7 @@ import com.example.backend.document.dto.UploadRequestDTO;
 import com.example.backend.document.entity.Document;
 import com.example.backend.document.service.DocumentService;
 import com.example.backend.file.service.FileService;
+import com.example.backend.mail.service.MailService;
 import com.example.backend.member.entity.Member;
 import com.example.backend.member.service.MemberService;
 import com.example.backend.signature.DTO.SignatureDTO;
@@ -48,6 +49,7 @@ public class DocumentController {
     private final SignatureRequestService signatureRequestService;
     private final SignatureService signatureService;
     private final PdfService pdfService;
+    private final MailService mailService;
 
 
     @PostMapping(value = "/full-upload", consumes = {"multipart/form-data"})
@@ -241,9 +243,13 @@ public class DocumentController {
     public ResponseEntity<?> rejectDocumentReview(
             @PathVariable Long documentId,
             @RequestBody  Map<String, String> body) {
-
+        Document document = documentService.getDocumentById(documentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
         String reason = body.get("reason");
+
+        mailService.sendRejectedSignatureMail(document.getMember().getEmail(), document, "관리자", reason);
         documentService.rejectDocument(documentId, reason);
+
         return ResponseEntity.ok("문서가 성공적으로 반려 처리되었습니다.");
     }
 
