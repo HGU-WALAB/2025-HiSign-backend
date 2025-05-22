@@ -29,7 +29,7 @@ public class MemberService {
                 .map(member -> new SearchMemberDTO(
                         member.getName(),
                         member.getEmail(),
-                        convertGradeToPosition(member.getGrade())
+                        convertGradeToPosition(member.getGrade(),member.getUniqueId())
                 ))
                 .collect(Collectors.toList());
     }
@@ -40,7 +40,7 @@ public class MemberService {
                 .map(member -> new SearchMemberDTO(
                         member.getName(),
                         member.getEmail(),
-                        convertGradeToPosition(member.getGrade())
+                        convertGradeToPosition(member.getGrade(),member.getUniqueId())
                 ))
                 .collect(Collectors.toList());
     }
@@ -51,14 +51,14 @@ public class MemberService {
                 .map(member -> new SearchMemberDTO(
                         member.getName(),
                         member.getEmail(),
-                        convertGradeToPosition(member.getGrade())
+                        convertGradeToPosition(member.getGrade(),member.getUniqueId())
                 ))
                 .collect(Collectors.toList());
     }
 
-    private String convertGradeToPosition(Integer grade) {
-        if (grade == -1) return "교수님";
-        if (grade == 0) return "선생님";
+    private String convertGradeToPosition(Integer grade, String uniqueId) {
+        if (uniqueId.equals("50666") || uniqueId.equals("50654")) return "선생님";
+        else if (grade == -1) return "교수님";
         return "학생";
     }
 }
