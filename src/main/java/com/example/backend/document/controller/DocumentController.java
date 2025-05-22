@@ -180,7 +180,16 @@ public class DocumentController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteDocument(@PathVariable Long id) {
-        boolean deleted = documentService.deleteDocumentById(id);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof AuthDto)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("인증 정보가 없습니다.");
+        }
+
+        AuthDto authDto = (AuthDto) authentication.getPrincipal();
+        String uniqueId = authDto.getUniqueId();
+        boolean deleted = documentService.deleteDocumentById(id,uniqueId);
         if (deleted) {
             return ResponseEntity.ok("문서 및 관련 서명 요청이 성공적으로 삭제되었습니다.");
         } else {

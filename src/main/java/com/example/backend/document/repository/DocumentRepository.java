@@ -17,18 +17,36 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     @Query("SELECT d FROM Document d JOIN SignatureRequest s ON d.id = s.document.id WHERE s.signerEmail = :email")
     List<Document> findDocumentsBySignerEmail(@Param("email") String email);
 
-    @Query("SELECT DISTINCT d.id, d.fileName, d.createdAt, d.status, d.requestName, s.expiredAt " +
-            "FROM Document d " +
-            "LEFT JOIN SignatureRequest s ON d.id = s.document.id " +
-            "WHERE d.member.uniqueId = :uniqueId")
+    @Query(value =
+            "SELECT DISTINCT d.id, d.file_name, d.created_at, d.status, d.request_name, sr.expired_at " +
+                    "FROM document d " +
+                    "JOIN member m ON d.unique_id = m.unique_id " + // ← JOIN 추가
+                    "LEFT JOIN signature_request sr ON d.id = sr.document_id " +
+                    "WHERE m.unique_id = :uniqueId " +              // ← member 기준 비교
+                    "AND NOT EXISTS ( " +
+                    "    SELECT 1 FROM hidden_document h " +
+                    "    WHERE h.document_id = d.id AND h.member_id = :uniqueId " +
+                    ") " +
+                    "ORDER BY d.created_at DESC",
+            nativeQuery = true)
     List<Object[]> findDocumentsWithExpiration(@Param("uniqueId") String uniqueId);
 
-    @Query("SELECT DISTINCT d.id, d.fileName, d.createdAt, d.status, m.name, d.requestName, s.expiredAt, s.token, d.isRejectable, s.status " +
-            "FROM Document d " +
-            "JOIN d.member m " +
-            "JOIN SignatureRequest s ON d.id = s.document.id " +
-            "WHERE s.signerEmail = :email")
-    List<Object[]> findDocumentsBySignerEmailWithRequester(@Param("email") String email);
+    @Query(value =
+            "SELECT DISTINCT d.id, d.file_name, d.created_at, d.status AS document_status, " +
+                    "       m.name AS requester_name, d.request_name, sr.expired_at, " +
+                    "       sr.token, d.is_rejectable, sr.status AS request_status " +
+                    "FROM document d " +
+                    "JOIN member m ON d.unique_id = m.unique_id " +
+                    "JOIN signature_request sr ON d.id = sr.document_id " +
+                    "WHERE sr.signer_email = :email " +
+                    "AND NOT EXISTS ( " +
+                    "    SELECT 1 FROM hidden_document h " +
+                    "    WHERE h.document_id = d.id " +
+                    "      AND h.member_id = :uniqueId " +
+                    ") " +
+                    "ORDER BY d.created_at DESC",
+            nativeQuery = true)
+    List<Object[]> findDocumentsBySignerEmailWithRequester(@Param("email") String email, @Param("uniqueId") String uniqueId);
 
     @Query("SELECT DISTINCT d.id, d.fileName, d.createdAt, d.status, m.name, d.requestName, s.expiredAt, d.isRejectable " +
             "FROM Document d " +
