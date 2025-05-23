@@ -1,5 +1,6 @@
 package com.example.backend.document.service;
 
+import com.example.backend.auth.exception.DoNotExistException;
 import com.example.backend.auth.util.EncryptionUtil;
 import com.example.backend.document.dto.DocumentDTO;
 import com.example.backend.document.entity.Document;
@@ -174,16 +175,25 @@ public class DocumentService {
 
 
     @Transactional
-    public boolean deleteDocumentById(Long documentId, String uniqueId) {
+    public boolean deleteDocumentById(Long documentId, String uniqueId, String viewTypeRaw) {
         Optional<Document> documentOptional = documentRepository.findById(documentId);
 
         if (documentOptional.isPresent()) {
-            // 숨김 처리 INSERT
-            HiddenDocument hidden = new HiddenDocument();
-            hidden.setDocumentId(documentId);
-            hidden.setMemberId(uniqueId);
-            hidden.setHiddenAt(LocalDateTime.now());
-            hiddenDocumentRepository.save(hidden);
+            HiddenDocument.ViewType viewType;
+            try {
+                viewType = HiddenDocument.ViewType.valueOf(viewTypeRaw.toLowerCase());  // 혹은 .toUpperCase(), 대소문자 주의
+            } catch (IllegalArgumentException e) {
+                log.error("[ERROR] 잘못된 viewType 요청: {}", viewTypeRaw);
+                throw new IllegalArgumentException("유효하지 않은 viewType입니다: " + viewTypeRaw);
+            }
+            if (!hiddenDocumentRepository.existsByDocumentIdAndMemberIdAndViewType(documentId, uniqueId, viewType)) {
+                HiddenDocument hidden = new HiddenDocument();
+                hidden.setDocumentId(documentId);
+                hidden.setMemberId(uniqueId);
+                hidden.setViewType(viewType);
+                hidden.setHiddenAt(LocalDateTime.now());
+                hiddenDocumentRepository.save(hidden);
+            }
 
             return true;
         }
@@ -249,8 +259,8 @@ public class DocumentService {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "문서 정보를 찾을 수 없습니다.");
     }
 
-    public List<Map<String, Object>> getAllAdminDocuments() {
-        List<Object[]> results = documentRepository.findAllDocumentsWhereTypeIsOne();
+    public List<Map<String, Object>> getAllAdminDocuments(String uniqueId) {
+        List<Object[]> results = documentRepository.findAllDocumentsWhereTypeIsOne(uniqueId);
 
         List<Map<String, Object>> documents = new ArrayList<>();
         for (Object[] result : results) {

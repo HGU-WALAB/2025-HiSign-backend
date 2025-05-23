@@ -179,7 +179,7 @@ public class DocumentController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteDocument(@PathVariable Long id) {
+    public ResponseEntity<String> deleteDocument(@PathVariable Long id, @RequestParam("viewType") String viewType) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !(authentication.getPrincipal() instanceof AuthDto)) {
@@ -189,7 +189,7 @@ public class DocumentController {
 
         AuthDto authDto = (AuthDto) authentication.getPrincipal();
         String uniqueId = authDto.getUniqueId();
-        boolean deleted = documentService.deleteDocumentById(id,uniqueId);
+        boolean deleted = documentService.deleteDocumentById(id,uniqueId,viewType);
         if (deleted) {
             return ResponseEntity.ok("문서 및 관련 서명 요청이 성공적으로 삭제되었습니다.");
         } else {
@@ -227,7 +227,16 @@ public class DocumentController {
 
     @GetMapping("/admin_document")
     public ResponseEntity<List<Map<String, Object>>> getAdminDocuments(@RequestParam(value = "searchQuery", required = false) String searchQuery) {
-        List<Map<String, Object>> documents = documentService.getAllAdminDocuments();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof AuthDto)) {
+            throw new IllegalStateException("사용자의 인증 정보가 유효하지 않습니다.");
+        }
+
+        AuthDto authDto = (AuthDto) authentication.getPrincipal();
+        String uniqueId = authDto.getUniqueId();
+
+        List<Map<String, Object>> documents = documentService.getAllAdminDocuments(uniqueId);
 
         if (searchQuery != null && !searchQuery.isEmpty()) {
             documents = documents.stream()

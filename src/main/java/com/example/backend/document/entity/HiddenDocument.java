@@ -24,7 +24,14 @@ public class HiddenDocument {
     @Column(name = "member_id", nullable = false)
     private String memberId;  // uniqueId 기준
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "view_type", nullable = false)
+    private ViewType viewType;
+
     @Column(name = "hidden_at")
     private LocalDateTime hiddenAt;
 
+    public enum ViewType {
+        sent, received, admin
+    }
 }

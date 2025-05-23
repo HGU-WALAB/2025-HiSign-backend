@@ -25,7 +25,9 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
                     "WHERE m.unique_id = :uniqueId " +              // ← member 기준 비교
                     "AND NOT EXISTS ( " +
                     "    SELECT 1 FROM hidden_document h " +
-                    "    WHERE h.document_id = d.id AND h.member_id = :uniqueId " +
+                    "    WHERE h.document_id = d.id" +
+                    "    AND h.member_id = :uniqueId " +
+                    "    AND h.view_type = 'sent' " +
                     ") " +
                     "ORDER BY d.created_at DESC",
             nativeQuery = true)
@@ -43,17 +45,28 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
                     "    SELECT 1 FROM hidden_document h " +
                     "    WHERE h.document_id = d.id " +
                     "      AND h.member_id = :uniqueId " +
+                    "      AND h.view_type = 'received' " +
                     ") " +
                     "ORDER BY d.created_at DESC",
             nativeQuery = true)
     List<Object[]> findDocumentsBySignerEmailWithRequester(@Param("email") String email, @Param("uniqueId") String uniqueId);
 
-    @Query("SELECT DISTINCT d.id, d.fileName, d.createdAt, d.status, m.name, d.requestName, s.expiredAt, d.isRejectable " +
-            "FROM Document d " +
-            "JOIN d.member m " +
-            "JOIN SignatureRequest s ON d.id = s.document.id " +
-            "WHERE d.type = 1")
-    List<Object[]> findAllDocumentsWhereTypeIsOne();
+    @Query(value =
+            "SELECT DISTINCT d.id, d.file_name, d.created_at, d.status, m.name AS requester_name, " +
+                    "       d.request_name, sr.expired_at, d.is_rejectable " +
+                    "FROM document d " +
+                    "JOIN member m ON d.unique_id = m.unique_id " +
+                    "JOIN signature_request sr ON d.id = sr.document_id " +
+                    "WHERE d.type = 1 " +
+                    "AND NOT EXISTS ( " +
+                    "    SELECT 1 FROM hidden_document h " +
+                    "    WHERE h.document_id = d.id " +
+                    "      AND h.member_id = :uniqueId " +
+                    "      AND h.view_type = 'admin' " +
+                    ") " +
+                    "ORDER BY d.created_at DESC",
+            nativeQuery = true)
+    List<Object[]> findAllDocumentsWhereTypeIsOne(@Param("uniqueId") String uniqueId);
 
 
 
