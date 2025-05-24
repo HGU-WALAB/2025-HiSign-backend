@@ -72,7 +72,7 @@ public class SignerTokenFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             // ✅ 인증이 완료된 직후에 사용자 권한을 로그로 찍기
             authentication.getAuthorities().forEach(authority -> {
-                log.info("🔑 로그인 완료 - 사용자 권한: {}", authority.getAuthority());
+                log.info("서명자 필터 - 🔑 로그인 완료 - 사용자 권한: {}", authority.getAuthority());
             });
         } catch (Exception e) {
             log.warn("❌ SignerToken 인증 실패: {}", e.getMessage());

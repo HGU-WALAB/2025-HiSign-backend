@@ -93,7 +93,7 @@ public class AuthController {
         if (!signatureRequest.getPassword().equals(request.getPassword())) {
           log.debug("저장된 비밀번호: {}", signatureRequest.getPassword());
           log.debug("전달받은 비밀번호: {}", request.getPassword());
-          return ResponseEntity.status(401).body("비밀번호가 일치하지 않습니다.");
+          return ResponseEntity.status(400).body("비밀번호가 일치하지 않습니다.");
         }
       } else {
         log.info("✅ 전달받은 비밀번호가 NONE입니다. 비밀번호 검증을 생략합니다.");
@@ -133,5 +133,13 @@ public class AuthController {
     response.put("description", signatureRequest.getDocument().getDescription());
     response.put("isRejectable", signatureRequest.getDocument().getIsRejectable());
     return response;
+  }
+
+  @GetMapping("/signer/delete-cookie")
+  public ResponseEntity<?> logoutSigner(HttpServletResponse response) {
+    // 쿠키의 Max-Age를 0으로 설정하여 삭제
+    ResponseCookie deleteCookie = cookieUtil.expireSignerTokenCookie();
+    response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+    return ResponseEntity.ok().build();
   }
 }
