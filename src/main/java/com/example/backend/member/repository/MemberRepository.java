@@ -20,4 +20,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     // 📌 특정 문서의 uniqueId를 기반으로 멤버 이름 조회
     @Query("SELECT m.name FROM Member m WHERE m.uniqueId = :uniqueId")
     String findMemberNameByUniqueId(@Param("uniqueId") String uniqueId);
+
+    @Query("SELECT m.uniqueId FROM Member m WHERE m.email = :email")
+    String findUniqueIdByEmail(@Param("email") String email);
 }
