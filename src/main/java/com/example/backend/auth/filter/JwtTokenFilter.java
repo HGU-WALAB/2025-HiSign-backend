@@ -43,26 +43,33 @@ public class JwtTokenFilter extends OncePerRequestFilter {
   // ✅ 가독성을 위한 정적 메서드로 예외 엔드포인트를 패턴화
   private static Pattern buildExcludedPathPattern() {
     String[] excludedPaths = {
-            // 인증 필요 없는 공개 API
             "/api/auth/.*",
             "/api/signature-requests/check",
-            "/api/auth/signer/.*",  // permitAll에 명시되어 있음
-
-            // Swagger 문서용
+            "/api/signature-requests/validate",
+            "/api/signature-requests/complete",
+            "/api/signature-requests/reject/.*",
+            "/api/signature/.*",
+            "/api/documents/sign/.*",
+            "/api/files/signature/upload",
             "/swagger-ui/.*",
-            "/v3/api-docs",
             "/v3/api-docs/.*",
+            "/v3/api-docs",
             "/swagger-resources/.*",
             "/webjars/.*",
             "/swagger-ui.html",
 
-            // 와랩 배포용 대응
+            //와랩 배포용
             "/hisign_1/api/auth/.*",
             "/hisign_1/api/signature-requests/check",
-            "/hisign_1/api/auth/signer/.*",
+            "/hisign_1/api/signature-requests/validate",
+            "/hisign_1/api/signature-requests/complete",
+            "/hisign_1/api/signature-requests/reject/.*",
+            "/hisign_1/api/signature/.*",
+            "/hisign_1/api/documents/sign/.*",
+            "/hisign_1/api/files/signature/upload",
             "/hisign_1/swagger-ui/.*",
-            "/hisign_1/v3/api-docs",
             "/hisign_1/v3/api-docs/.*",
+            "/hisign_1/v3/api-docs",
             "/hisign_1/swagger-resources/.*",
             "/hisign_1/webjars/.*",
             "/hisign_1/swagger-ui.html"
@@ -174,7 +181,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     // ✅ 인증이 완료된 직후에 사용자 권한을 로그로 찍기
     authenticationToken.getAuthorities().forEach(authority -> {
-      log.info("토큰 필터 - 🔑 로그인 완료 - 사용자 권한: {}", authority.getAuthority());
+      log.info("🔑 로그인 완료 - 사용자 권한: {}", authority.getAuthority());
     });
   }
 

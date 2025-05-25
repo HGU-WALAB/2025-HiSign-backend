@@ -1,21 +1,22 @@
 package com.example.backend.document.controller;
 
 import com.example.backend.auth.dto.AuthDto;
+import com.example.backend.document.dto.DocumentDTO;
 import com.example.backend.document.dto.UploadRequestDTO;
 import com.example.backend.document.entity.Document;
 import com.example.backend.document.service.DocumentService;
 import com.example.backend.file.service.FileService;
-import com.example.backend.mail.service.MailService;
 import com.example.backend.member.entity.Member;
 import com.example.backend.member.service.MemberService;
-import com.example.backend.signature.DTO.SignatureDTO;
-import com.example.backend.signature.service.SignatureService;
 import com.example.backend.signatureRequest.service.SignatureRequestService;
-import com.example.backend.pdf.service.PdfService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,19 +24,17 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
 
 @Slf4j
 @RestController
@@ -47,9 +46,6 @@ public class DocumentController {
     private final DocumentService documentService;
     private final MemberService memberService;
     private final SignatureRequestService signatureRequestService;
-    private final SignatureService signatureService;
-    private final PdfService pdfService;
-    private final MailService mailService;
 
 
     @PostMapping(value = "/full-upload", consumes = {"multipart/form-data"})
@@ -58,8 +54,6 @@ public class DocumentController {
             @RequestParam("file") MultipartFile file,
             @RequestPart("dto") UploadRequestDTO dto
     ) {
-        log.info("📥 fullUpload 요청 수신 - uniqueId: {}", dto.getUniqueId());
-        log.info("📦 파일 이름: {}", file.getOriginalFilename());
         try {
             // 1. 파일 저장
             String storedFileName = fileService.storeFile(file, "DOCUMENT");
@@ -94,9 +88,6 @@ public class DocumentController {
 
             return ResponseEntity.ok("문서 업로드 및 서명 요청이 성공적으로 처리되었습니다.");
 
-        } catch (IllegalArgumentException e) {
-            log.warn("사용자 조회 실패: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
             log.error("❌ fullUpload 실패", e);
             throw new RuntimeException("fullUpload 처리 중 오류 발생: " + e.getMessage(), e);
@@ -141,7 +132,7 @@ public class DocumentController {
 
         String email = ((AuthDto) principal).getEmail();
 
-        log.debug("[DEBUG] 요청받은 문서 리스트 요청 - 이메일: {}", email);
+        System.out.println("[DEBUG] 요청받은 문서 리스트 요청 - 이메일: " + email);
 
         List<Map<String, Object>> documents = documentService.getDocumentsWithRequesterInfoBySignerEmail(email);
 
@@ -153,6 +144,8 @@ public class DocumentController {
 
         return documents;
     }
+
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Resource> getDocument(@PathVariable Long id) {
@@ -179,17 +172,8 @@ public class DocumentController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteDocument(@PathVariable Long id, @RequestParam("viewType") String viewType) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !(authentication.getPrincipal() instanceof AuthDto)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("인증 정보가 없습니다.");
-        }
-
-        AuthDto authDto = (AuthDto) authentication.getPrincipal();
-        String uniqueId = authDto.getUniqueId();
-        boolean deleted = documentService.deleteDocumentById(id,uniqueId,viewType);
+    public ResponseEntity<String> deleteDocument(@PathVariable Long id) {
+        boolean deleted = documentService.deleteDocumentById(id);
         if (deleted) {
             return ResponseEntity.ok("문서 및 관련 서명 요청이 성공적으로 삭제되었습니다.");
         } else {
@@ -227,16 +211,7 @@ public class DocumentController {
 
     @GetMapping("/admin_document")
     public ResponseEntity<List<Map<String, Object>>> getAdminDocuments(@RequestParam(value = "searchQuery", required = false) String searchQuery) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !(authentication.getPrincipal() instanceof AuthDto)) {
-            throw new IllegalStateException("사용자의 인증 정보가 유효하지 않습니다.");
-        }
-
-        AuthDto authDto = (AuthDto) authentication.getPrincipal();
-        String uniqueId = authDto.getUniqueId();
-
-        List<Map<String, Object>> documents = documentService.getAllAdminDocuments(uniqueId);
+        List<Map<String, Object>> documents = documentService.getAllAdminDocuments();
 
         if (searchQuery != null && !searchQuery.isEmpty()) {
             documents = documents.stream()
@@ -257,100 +232,14 @@ public class DocumentController {
         }
     }
 
-    @PutMapping("/{documentId}/reject")
-    public ResponseEntity<?> rejectDocumentReview(
-            @PathVariable Long documentId,
-            @RequestBody  Map<String, String> body) {
-        Document document = documentService.getDocumentById(documentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
-        String reason = body.get("reason");
-
-        mailService.sendRejectedSignatureMail(document.getMember().getEmail(), document, "관리자", reason);
-        documentService.rejectDocument(documentId, reason);
-
-        return ResponseEntity.ok("문서가 성공적으로 반려 처리되었습니다.");
-    }
-
-    @GetMapping("/{id}/download")
-    public ResponseEntity<byte[]> downloadDocument(@PathVariable Long id) {
+    @GetMapping("/{id}/title")
+    public ResponseEntity<String> getDocumentTitle(@PathVariable Long id) {
         Document document = documentService.getDocumentById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
-        try{
-            List<SignatureDTO> signatures = signatureService.getSignaturesForDocument(id);
 
-            // ✅ 5. PDF 생성
-            byte[] pdfData = pdfService.generateSignedDocument(id, signatures);
-            String fileName = document.getFileName();
-
-            String encodedFileName = URLEncoder.encode(fileName, "UTF-8")
-                    .replaceAll("\\+", "%20");
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.set("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFileName);
-
-            return new ResponseEntity<>(pdfData, headers, HttpStatus.OK);
-        }catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "서명된 문서 다운로드 실패", e);
-        }
+        return ResponseEntity.ok(document.getRequestName());
     }
 
-    @PostMapping("/download/zip")
-    public ResponseEntity<byte[]> downloadDocumentsAsZip(@RequestBody List<Long> documentIds) {
-        try {
-            ByteArrayOutputStream zipBaos = new ByteArrayOutputStream();
-            ZipOutputStream zipOut = new ZipOutputStream(zipBaos);
-            Map<String, Integer> fileNameCount = new HashMap<>();
-
-            for (Long id : documentIds) {
-                Document document = documentService.getDocumentById(id)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
-
-                List<SignatureDTO> signatures = signatureService.getSignaturesForDocument(id);
-                byte[] pdfData = pdfService.generateSignedDocument(id, signatures);
-
-                String baseName  = document.getRequestName();
-                if (!baseName .toLowerCase().endsWith(".pdf")) {
-                    baseName  += ".pdf";
-                }
-
-                // 중복 처리
-                String finalName = baseName;
-                if (fileNameCount.containsKey(baseName)) {
-                    int count = fileNameCount.get(baseName) + 1;
-                    fileNameCount.put(baseName, count);
-
-                    // 파일명 확장자 분리 후 (1), (2) 붙이기
-                    int dotIndex = baseName.lastIndexOf('.');
-                    String nameOnly = baseName.substring(0, dotIndex);
-                    String ext = baseName.substring(dotIndex);
-
-                    finalName = nameOnly + " (" + count + ")" + ext;
-                } else {
-                    fileNameCount.put(baseName, 0); // 첫 등장 기록
-                }
-
-                // ZIP에 엔트리 추가
-                zipOut.putNextEntry(new ZipEntry(finalName));
-                zipOut.write(pdfData);
-                zipOut.closeEntry();
-            }
-
-            zipOut.close();
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-            headers.setContentDisposition(ContentDisposition
-                    .attachment()
-                    .filename("documents.zip")
-                    .build());
-
-            return new ResponseEntity<>(zipBaos.toByteArray(), headers, HttpStatus.OK);
-
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "ZIP 압축 중 오류 발생", e);
-        }
-    }
 
 }
 

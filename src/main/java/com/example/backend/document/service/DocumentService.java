@@ -1,19 +1,14 @@
 package com.example.backend.document.service;
 
-import com.example.backend.auth.exception.DoNotExistException;
 import com.example.backend.auth.util.EncryptionUtil;
 import com.example.backend.document.dto.DocumentDTO;
 import com.example.backend.document.entity.Document;
-import com.example.backend.document.entity.HiddenDocument;
 import com.example.backend.document.repository.DocumentRepository;
-import com.example.backend.document.repository.HiddenDocumentRepository;
 import com.example.backend.file.service.FileService;
 import com.example.backend.member.entity.Member;
 import com.example.backend.member.repository.MemberRepository;
 import com.example.backend.signatureRequest.repository.SignatureRequestRepository;
-import com.example.backend.signatureRequest.service.SignatureRequestService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -22,13 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.math.BigInteger;
 import java.nio.file.Path;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DocumentService {
@@ -37,7 +29,6 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final MemberRepository memberRepository;
     private final SignatureRequestRepository signatureRequestRepository;
-    private final HiddenDocumentRepository hiddenDocumentRepository;
     private final EncryptionUtil encryptionUtil;
 
     public Optional<Document> getDocumentById(Long documentId) {
@@ -72,7 +63,7 @@ public class DocumentService {
         LocalDateTime now = LocalDateTime.now();
 
         if (results == null || results.isEmpty()) {
-            log.error("[ERROR] 요청한 문서 데이터가 존재하지 않음. uniqueId: {}", uniqueId);
+            System.out.println("[ERROR] 요청한 문서 데이터가 존재하지 않음. uniqueId: " + uniqueId);
             return new ArrayList<>();
         }
 
@@ -80,17 +71,9 @@ public class DocumentService {
         for (Object[] result : results) {
             try {
                 Map<String, Object> docMap = new HashMap<>();
-                BigInteger docIdRaw = (BigInteger) result[0];
-                Long docId = docIdRaw.longValue();
-                Byte statusByte = (Byte) result[3];
-                Integer status = statusByte.intValue();
-                Timestamp createdAtRaw = (Timestamp) result[2];
-                LocalDateTime createdAt = createdAtRaw.toLocalDateTime();
-
-                LocalDateTime expiredAt = null;
-                if (result[5] != null) {
-                    expiredAt = ((Timestamp) result[5]).toLocalDateTime();
-                }
+                Long docId = (Long) result[0];
+                Integer status = (Integer) result[3];
+                LocalDateTime expiredAt = result[5] != null ? (LocalDateTime) result[5] : null;
                 if (expiredAt != null && expiredAt.isBefore(now) && status == 0) {
                     documentRepository.updateDocumentStatusToExpired(docId);
                     status = 4;
@@ -98,27 +81,27 @@ public class DocumentService {
 
                 docMap.put("id", docId);
                 docMap.put("fileName", result[1]);
-                docMap.put("createdAt", createdAt);
+                docMap.put("createdAt", result[2]);
                 docMap.put("status", status);
                 docMap.put("requestName", result[4] != null ? result[4] : "작업명 없음");
                 docMap.put("expiredAt", expiredAt != null ? expiredAt : "미설정");
 
                 documents.add(docMap);
             } catch (Exception e) {
-                log.error("[ERROR] 요청한 문서 데이터 매핑 중 오류 발생: {}", e.getMessage());
+                System.out.println("[ERROR] 요청한 문서 데이터 매핑 중 오류 발생: " + e.getMessage());
             }
         }
         return documents;
     }
 
+    //요청 받은 문서 정보 API
     @Transactional
     public List<Map<String, Object>> getDocumentsWithRequesterInfoBySignerEmail(String email) {
-        String uniqueId = memberRepository.findUniqueIdByEmail(email);
-        List<Object[]> results = documentRepository.findDocumentsBySignerEmailWithRequester(email, uniqueId);
+        List<Object[]> results = documentRepository.findDocumentsBySignerEmailWithRequester(email);
         LocalDateTime now = LocalDateTime.now();
 
         if (results == null || results.isEmpty()) {
-            log.error("[ERROR] 문서 데이터가 존재하지 않음. email: {}", email);
+            System.out.println("[ERROR] 문서 데이터가 존재하지 않음. email: " + email);
             return new ArrayList<>();
         }
 
@@ -126,74 +109,60 @@ public class DocumentService {
         for (Object[] result : results) {
             try {
                 Map<String, Object> docMap = new HashMap<>();
-                Long docId = ((Number) result[0]).longValue();
-                String fileName = (String) result[1];
-                LocalDateTime createdAt = ((Timestamp) result[2]).toLocalDateTime();
-                Integer documentStatus = ((Number) result[3]).intValue();
-                String requesterName = (String) result[4];
-                String requestName = (String) result[5];
-                Timestamp expiredAtRaw = result[6] != null ? (Timestamp) result[6] : null;
-                LocalDateTime expiredAt = expiredAtRaw != null ? expiredAtRaw.toLocalDateTime() : null;
+                Long docId = (Long) result[0];
+                Integer status = (Integer) result[3];
+                LocalDateTime expiredAt = result[6] != null ? (LocalDateTime) result[6] : null;
+                Integer type = (Integer) result[8];
 
-                if (expiredAt != null && expiredAt.isBefore(now) && documentStatus == 0) {
+                if (expiredAt != null && expiredAt.isBefore(now) && status == 0) {
                     documentRepository.updateDocumentStatusToExpired(docId);
-                    documentStatus = 4;
+                    status = 4;
                 }
 
                 docMap.put("id", docId);
-                docMap.put("fileName", fileName);
-                docMap.put("createdAt", createdAt);
-                docMap.put("status", documentStatus);
-                docMap.put("requesterName", requesterName != null ? requesterName : "알 수 없음");
-                docMap.put("requestName", requestName != null ? requestName : "작업명 없음");
+                docMap.put("fileName", result[1]);
+                docMap.put("createdAt", result[2]);
+                docMap.put("status", status);
+                docMap.put("requesterName", result[4] != null ? result[4] : "알 수 없음");
+                docMap.put("requestName", result[5] != null ? result[5] : "작업명 없음");
                 docMap.put("expiredAt", expiredAt != null ? expiredAt : "미설정");
-
-                String token = (String) result[7];
+                String token = result.length > 6 ? (String) result[7] : null;
+                docMap.put("type", result[8]);
                 if (token != null) {
                     try {
                         String encryptedToken = encryptionUtil.encryptUUID(token);
-                        docMap.put("token", encryptedToken);
+                        docMap.put("token", encryptedToken); // 🔹 암호화된 토큰 저장
                     } catch (Exception e) {
-                        log.error("[ERROR] 토큰 암호화 실패: {}", e.getMessage());
+                        System.out.println("[ERROR] 토큰 암호화 실패: " + e.getMessage());
                         docMap.put("token", "암호화 실패");
                     }
                 } else {
                     docMap.put("token", "토큰 없음");
                 }
-
-                docMap.put("isRejectable", result[8] != null && ((Number) result[8]).intValue() == 1);
-                docMap.put("signStatus", ((Number) result[9]).intValue());
+                docMap.put("isRejectable", result[8] != null ? result[8] : "0");
 
                 documents.add(docMap);
             } catch (Exception e) {
-                log.error("[ERROR] 문서 데이터 매핑 중 오류 발생: {}", e.getMessage());
+                System.out.println("[ERROR] 문서 데이터 매핑 중 오류 발생: " + e.getMessage());
             }
         }
-
         return documents;
     }
 
-
     @Transactional
-    public boolean deleteDocumentById(Long documentId, String uniqueId, String viewTypeRaw) {
+    public boolean deleteDocumentById(Long documentId) {
         Optional<Document> documentOptional = documentRepository.findById(documentId);
 
         if (documentOptional.isPresent()) {
-            HiddenDocument.ViewType viewType;
-            try {
-                viewType = HiddenDocument.ViewType.valueOf(viewTypeRaw.toLowerCase());  // 혹은 .toUpperCase(), 대소문자 주의
-            } catch (IllegalArgumentException e) {
-                log.error("[ERROR] 잘못된 viewType 요청: {}", viewTypeRaw);
-                throw new IllegalArgumentException("유효하지 않은 viewType입니다: " + viewTypeRaw);
-            }
-            if (!hiddenDocumentRepository.existsByDocumentIdAndMemberIdAndViewType(documentId, uniqueId, viewType)) {
-                HiddenDocument hidden = new HiddenDocument();
-                hidden.setDocumentId(documentId);
-                hidden.setMemberId(uniqueId);
-                hidden.setViewType(viewType);
-                hidden.setHiddenAt(LocalDateTime.now());
-                hiddenDocumentRepository.save(hidden);
-            }
+            Document document = documentOptional.get();
+
+            document.setStatus(5);
+            document.setDeletedAt(LocalDateTime.now());
+
+            // 문서 상태 삭제로 변경
+            documentRepository.save(document);
+            // 관련 서명 요청 삭제 상태로 변경
+            signatureRequestRepository.updateRequestStatusToDeleted(documentId);
 
             return true;
         }
@@ -234,9 +203,6 @@ public class DocumentService {
                     .findRejectReasonByDocumentId(documentId)
                     .orElse("없음");
 
-            String reviewRejectReason = document.getReviewRejectReason();
-            String cancelReason = document.getCancelReason() != null ? document.getCancelReason() : "없음";
-
             LocalDateTime createdAt = document.getCreatedAt();
 
             String fileName = document.getFileName();
@@ -249,9 +215,7 @@ public class DocumentService {
             documentDetails.put("createdAt", createdAt);
             documentDetails.put("fileName", fileName);
             documentDetails.put("requestName", requestName);
-            documentDetails.put("reviewRejectReason", reviewRejectReason);
             documentDetails.put("status", status);
-            documentDetails.put("cancelReason", cancelReason);
 
             return documentDetails;
         }
@@ -259,8 +223,8 @@ public class DocumentService {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "문서 정보를 찾을 수 없습니다.");
     }
 
-    public List<Map<String, Object>> getAllAdminDocuments(String uniqueId) {
-        List<Object[]> results = documentRepository.findAllDocumentsWhereTypeIsOne(uniqueId);
+    public List<Map<String, Object>> getAllAdminDocuments() {
+        List<Object[]> results = documentRepository.findAllDocumentsWhereTypeIsOne();
 
         List<Map<String, Object>> documents = new ArrayList<>();
         for (Object[] result : results) {
@@ -297,17 +261,6 @@ public class DocumentService {
     }
     @Transactional
     public void save(Document document) {
-        documentRepository.save(document);
-    }
-
-    public void rejectDocument(Long documentId, String rejectReason) {
-        Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 문서입니다."));
-
-        document.setReviewRejectReason(rejectReason);
-        document.setStatus(2); // 2 = 거절됨
-        document.setUpdatedAt(LocalDateTime.now());
-
         documentRepository.save(document);
     }
 }

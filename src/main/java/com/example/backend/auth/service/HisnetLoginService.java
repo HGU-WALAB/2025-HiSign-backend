@@ -4,7 +4,6 @@ import com.example.backend.auth.dto.AuthDto;
 import com.example.backend.auth.exception.FailedHisnetLoginException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.core.ParameterizedTypeReference;
@@ -18,7 +17,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.util.HashMap;
 import java.util.Map;
 
-@Slf4j
 @Service
 public class HisnetLoginService {
 
@@ -41,7 +39,6 @@ public class HisnetLoginService {
     UriComponents uri = UriComponentsBuilder.fromHttpUrl(url).build();
 
     try {
-      log.info("Calling Hisnet Login API");
       ParameterizedTypeReference<Map<String, Object>> typeRef =
           new ParameterizedTypeReference<Map<String, Object>>(){};
       ResponseEntity<Map<String, Object>> resultMap =
@@ -56,7 +53,9 @@ public class HisnetLoginService {
       String major2 = (String) result.get("major2");
       Integer grade = result.get("grade") != null ? Integer.parseInt(result.get("grade").toString()) : null;
       int semester = Integer.parseInt(result.get("semester").toString());
-
+      //교직원인지 판단하여 권한 부여 그러나 일단은 보류
+      //int level = (grade == null && major1 == null && major2 == null && semester == 0) ? 1 : 0;
+      int level = (uniqueId.equals("21700214"))? 1:0;
       return  AuthDto.builder()
               .uniqueId(uniqueId)
               .name(name)
@@ -66,8 +65,8 @@ public class HisnetLoginService {
               .major2(major2)
               .grade(grade)
               .semester(semester)
+              .level(level)
               .build();
-
     } catch (HttpStatusCodeException e) {
       Map<String, Object> result = new HashMap<>();
         try {

@@ -90,7 +90,7 @@ public class SignatureRequestService {
         Optional<Document> documentOptional = documentRepository.findById(documentId);
         if (documentOptional.isPresent()) {
             Document document = documentOptional.get();
-            document.setStatus(6);
+            document.setStatus(2);
             documentRepository.save(document);
         }
 

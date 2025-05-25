@@ -52,9 +52,9 @@ public class SecurityConfig {
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
             .authorizeRequests()
-            .antMatchers("/api/signature/**").hasAnyAuthority("ROLE_SIGNER", "ROLE_USER", "ROLE_ADMIN")
             .antMatchers(
                     "/api/signature-requests/reject/**",
+                    "/api/signature/**",
                     "/api/documents/sign/**",
                     "/api/files/signature/upload",
                     "/api/signature-requests/complete"
@@ -63,7 +63,7 @@ public class SecurityConfig {
             .antMatchers(
                     "/api/auth/**",
                     "/api/signature-requests/check",
-                    "/api/auth/signer/**",
+                    "/api/auth/signer/validate",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
                     "/swagger-resources/**",

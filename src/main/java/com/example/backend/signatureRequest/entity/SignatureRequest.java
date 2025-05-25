@@ -23,7 +23,7 @@ public class SignatureRequest {
     private Long requestId; // 서명 요청 ID (Primary Key)
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "document_id")
+    @JoinColumn(name = "document_id", nullable = false)
     private Document document; // 문서 ID (외래 키)
 
     @Column(nullable = false, length = 50)

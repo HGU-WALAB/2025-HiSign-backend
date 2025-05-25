@@ -1,6 +1,5 @@
 package com.example.backend.auth.service;
 
-import com.example.backend.auth.config.AdminList;
 import com.example.backend.auth.config.CookieProperties;
 import com.example.backend.auth.dto.AuthDto;
 import com.example.backend.auth.exception.DoNotExistException;
@@ -12,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -31,11 +31,9 @@ public class AuthService {
   }
 
   public AuthDto login(AuthDto dto) {
-    int level = isAdmin(dto) ? 1 : 0;
-
     Optional<Member> member = memberRepository.findByUniqueId(dto.getUniqueId());
     if (!member.isPresent()) {
-      Member newMember=Member.from(dto.toBuilder().level(level).build());
+      Member newMember=Member.from(dto);
       memberRepository.save(newMember);
         return AuthDto.builder()
                 .token(
@@ -49,9 +47,4 @@ public class AuthService {
               .build();
     }
   }
-
-  private boolean isAdmin(AuthDto dto) {
-    return AdminList.ADMIN_UNIQUE_IDS.contains(dto.getUniqueId());
-  }
-
 }

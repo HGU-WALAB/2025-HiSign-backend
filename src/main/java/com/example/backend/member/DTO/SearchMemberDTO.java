@@ -12,5 +12,5 @@ import lombok.Setter;
 public class SearchMemberDTO {
     private String name;
     private String email;
-    private String position;
+
 }

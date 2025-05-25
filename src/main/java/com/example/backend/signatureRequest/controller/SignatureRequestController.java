@@ -100,8 +100,7 @@ public class SignatureRequestController {
                                                          @RequestBody Map<String, String> requestBody) {
         String reason = requestBody.get("reason");
         String encryptedToken = requestBody.get("token"); // 🔹 클라이언트에서 전달된 암호화된 토큰
-        String email = requestBody.get("email");
-        String name = requestBody.get("signerName");
+        String email = requestBody.get("email"); // 🔹 클라이언트에서 입력한 이메일
 
         if (reason == null || reason.trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("거절 사유가 필요합니다.");
@@ -127,10 +126,6 @@ public class SignatureRequestController {
             if (!signatureRequest.getSignerEmail().equals(email)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("이메일이 일치하지 않습니다.");
             }
-
-            Document document = documentService.getDocumentById(documentId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
-            mailService.sendRejectedSignatureMail(email,document,name,reason);
 
             // 🔹 요청 거절 처리
             boolean isRejected = signatureRequestService.rejectSignatureRequest(documentId, reason);
