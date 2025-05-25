@@ -162,10 +162,8 @@ public class SignatureService {
 
                 // ✅ 6. 문서와 관련된 모든 사용자(요청자 + 서명자)에게 이메일 발송
                 List<String> recipients = getAllRecipientsForDocument(documentId);
-                if(document.getType() != 1) {
-                    for (String email : recipients) {
-                        mailService.sendCompletedSignatureMail(email, document, pdfData);
-                    }
+                for (String email : recipients) {
+                    mailService.sendCompletedSignatureMail(email, document, pdfData);
                 }
 
                 // ✅ 7. (메일 발송 완료 후) 문서 상태를 "완료(1)"로 변경
@@ -201,14 +199,5 @@ public class SignatureService {
         return signatures.stream()
                 .map(SignatureDTO::fromEntity)
                 .collect(Collectors.toList());
-    }
-
-    public boolean hasExistingSignature(String signerEmail) {
-        return signatureRepository.existsBySignerEmailAndStatus(signerEmail, 1);
-    }
-
-    public Optional<Signature> getLatestImageSignature(String signerEmail) {
-        // type = 0 → 이미지 서명
-        return signatureRepository.findFirstBySignerEmailAndTypeAndImageNameIsNotNullOrderBySignedAtDesc(signerEmail, 0);
     }
 }
