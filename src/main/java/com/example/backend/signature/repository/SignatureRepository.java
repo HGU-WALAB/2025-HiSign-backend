@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SignatureRepository extends JpaRepository<Signature, Long> {
@@ -20,4 +21,9 @@ public interface SignatureRepository extends JpaRepository<Signature, Long> {
     // 📌 특정 문서에 대한 서명자의 이메일 목록 조회
     @Query("SELECT DISTINCT s.signerEmail FROM Signature s WHERE s.document.id = :documentId")
     List<String> findSignerEmailsByDocumentId(@Param("documentId") Long documentId);
+
+    boolean existsBySignerEmailAndStatus(String signerEmail, int status);
+
+    Optional<Signature> findFirstBySignerEmailAndTypeAndImageNameIsNotNullOrderBySignedAtDesc(String signerEmail, int type);
+
 }
