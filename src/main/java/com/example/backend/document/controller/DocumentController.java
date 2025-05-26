@@ -9,6 +9,7 @@ import com.example.backend.mail.service.MailService;
 import com.example.backend.member.entity.Member;
 import com.example.backend.member.service.MemberService;
 import com.example.backend.signature.DTO.SignatureDTO;
+import com.example.backend.signature.entity.Signature;
 import com.example.backend.signature.service.SignatureService;
 import com.example.backend.signatureRequest.service.SignatureRequestService;
 import com.example.backend.pdf.service.PdfService;
@@ -178,6 +179,30 @@ public class DocumentController {
         }
     }
 
+    @GetMapping("/{id}/signed-preview")
+    public ResponseEntity<byte[]> previewSignedDocument(@PathVariable Long id) {
+        Document document = documentService.getDocumentById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
+
+        try {
+            List<Signature> signatures = signatureService.getSignaturesForDocument(id);
+            byte[] pdfData = pdfService.generateReviewDocument(id, signatures);
+
+            String encodedFileName = URLEncoder.encode(document.getFileName(), String.valueOf(StandardCharsets.UTF_8))
+                    .replace("+", "%20");
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(ContentDisposition.inline()
+                    .filename(encodedFileName, StandardCharsets.UTF_8)
+                    .build());
+
+            return new ResponseEntity<>(pdfData, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "서명 포함 문서 미리보기 실패", e);
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteDocument(@PathVariable Long id, @RequestParam("viewType") String viewType) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -276,7 +301,7 @@ public class DocumentController {
         Document document = documentService.getDocumentById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
         try{
-            List<SignatureDTO> signatures = signatureService.getSignaturesForDocument(id);
+            List<Signature> signatures = signatureService.getSignaturesForDocument(id);
 
             // ✅ 5. PDF 생성
             byte[] pdfData = pdfService.generateSignedDocument(id, signatures);
@@ -306,7 +331,7 @@ public class DocumentController {
                 Document document = documentService.getDocumentById(id)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
 
-                List<SignatureDTO> signatures = signatureService.getSignaturesForDocument(id);
+                List<Signature> signatures = signatureService.getSignaturesForDocument(id);
                 byte[] pdfData = pdfService.generateSignedDocument(id, signatures);
 
                 String baseName  = document.getRequestName();
