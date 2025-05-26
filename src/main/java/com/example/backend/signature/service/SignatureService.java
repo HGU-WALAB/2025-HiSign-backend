@@ -155,7 +155,7 @@ public class SignatureService {
         if (allCompleted) {
             try {
                 // ✅ 4. 서명 정보 가져오기
-                List<SignatureDTO> signatures = getSignaturesForDocument(documentId);
+                List<Signature> signatures = getSignaturesForDocument(documentId);
 
                 // ✅ 5. PDF 생성
                 byte[] pdfData = pdfService.generateSignedDocument(documentId, signatures);
@@ -191,16 +191,14 @@ public class SignatureService {
         return new ArrayList<>(recipients);
     }
 
-    public List<SignatureDTO> getSignaturesForDocument(Long documentId) {
+    public List<Signature> getSignaturesForDocument(Long documentId) {
         List<Signature> signatures = signatureRepository.findByDocumentId(documentId);
 
         if (signatures.isEmpty()) {
             throw new IllegalArgumentException("해당 문서에 대한 서명 정보가 존재하지 않습니다.");
         }
 
-        return signatures.stream()
-                .map(SignatureDTO::fromEntity)
-                .collect(Collectors.toList());
+        return signatures;
     }
 
     public boolean hasExistingSignature(String signerEmail) {

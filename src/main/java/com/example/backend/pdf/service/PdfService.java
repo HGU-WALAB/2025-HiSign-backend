@@ -4,6 +4,7 @@ import com.example.backend.file.service.FileService;
 import com.example.backend.document.entity.Document;
 import com.example.backend.document.service.DocumentService;
 import com.example.backend.signature.DTO.SignatureDTO;
+import com.example.backend.signature.entity.Signature;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Image;
 import com.lowagie.text.pdf.*;
@@ -27,7 +28,7 @@ public class PdfService {
     private final FileService fileService;
 
     @Transactional(rollbackFor = Exception.class)
-    public byte[] generateSignedDocument(Long documentId, List<SignatureDTO> signatures) throws IOException, DocumentException {
+    public byte[] generateSignedDocument(Long documentId, List<Signature> signatures) throws IOException, DocumentException {
         Document document = documentService.getDocumentById(documentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
 
@@ -37,8 +38,11 @@ public class PdfService {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PdfStamper stamper = new PdfStamper(reader, outputStream);
 
-        for (SignatureDTO signatureDTO : signatures) {
-            addSignatureToPdf(stamper, signatureDTO, reader); // ✅ reader 추가
+        for (Signature signature : signatures) {
+            boolean isCompleted = signature.getStatus() == 1;
+            if (isCompleted) {
+                addSignatureToPdf(stamper, signature, reader);
+            }
         }
 
         stamper.close();
@@ -47,12 +51,12 @@ public class PdfService {
         return outputStream.toByteArray();
     }
 
-    private void addSignatureToPdf(PdfStamper stamper, SignatureDTO signatureDTO, PdfReader reader) throws IOException, DocumentException {
-        PdfContentByte content = stamper.getOverContent(signatureDTO.getPosition().getPageNumber());
+    private void addSignatureToPdf(PdfStamper stamper, Signature signature, PdfReader reader) throws IOException, DocumentException {
+        PdfContentByte content = stamper.getOverContent(signature.getPageNumber());
 
         // PDF 페이지 크기 가져오기
-        float pageWidth = reader.getPageSize(signatureDTO.getPosition().getPageNumber()).getWidth();
-        float pageHeight = reader.getPageSize(signatureDTO.getPosition().getPageNumber()).getHeight();
+        float pageWidth = reader.getPageSize(signature.getPageNumber()).getWidth();
+        float pageHeight = reader.getPageSize(signature.getPageNumber()).getHeight();
 
         // 프론트엔드 페이지 크기 (예: width=800, height=800)
         float frontEndPageWidth = 800;
@@ -62,12 +66,12 @@ public class PdfService {
         float scaleX = pageWidth / frontEndPageWidth;
         float scaleY = pageHeight / frontEndPageHeight;
 
-        float pdfX = signatureDTO.getPosition().getX() * scaleX;
-        float pdfY = (frontEndPageHeight - signatureDTO.getPosition().getY() - signatureDTO.getHeight()) * scaleY;
-        float pdfWidth = signatureDTO.getWidth() * scaleX;
-        float pdfHeight = signatureDTO.getHeight() * scaleY;
+        float pdfX = signature.getX() * scaleX;
+        float pdfY = (frontEndPageHeight - signature.getY() - signature.getHeight()) * scaleY;
+        float pdfWidth = signature.getWidth() * scaleX;
+        float pdfHeight = signature.getHeight() * scaleY;
 
-        Path imagePath = fileService.getSignatureFilePath(signatureDTO.getImageName());
+        Path imagePath = fileService.getSignatureFilePath(signature.getImageName());
 
         if (Files.exists(imagePath)) {
             Image signatureImage = Image.getInstance(imagePath.toString());

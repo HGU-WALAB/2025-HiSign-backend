@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Table(name = "hidden_document", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"document_id", "member_id"})
+        @UniqueConstraint(columnNames = {"document_id", "member_id", "view_type"})
 })
 public class HiddenDocument {
 
