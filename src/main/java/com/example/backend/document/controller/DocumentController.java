@@ -186,7 +186,7 @@ public class DocumentController {
 
         try {
             List<Signature> signatures = signatureService.getSignaturesForDocument(id);
-            byte[] pdfData = pdfService.generateSignedDocument(id, signatures);
+            byte[] pdfData = pdfService.generateReviewDocument(id, signatures);
 
             String encodedFileName = URLEncoder.encode(document.getFileName(), String.valueOf(StandardCharsets.UTF_8))
                     .replace("+", "%20");
@@ -222,6 +222,27 @@ public class DocumentController {
                     .body("해당 문서를 찾을 수 없습니다.");
         }
     }
+
+    //서명용 문서 불러오기
+    @GetMapping("/sign/{id}")
+    public ResponseEntity<Resource> getDocumentForSigning(@PathVariable Long id) throws UnsupportedEncodingException {
+        Resource resource = documentService.loadFileAsResource(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 읽어올 수 없습니다."));
+
+        // 문서의 원본 파일명 조회
+        String originalFileName = documentService.getOriginalFileName(id);
+        String encodedFileName = URLEncoder.encode(Objects.requireNonNull(originalFileName), String.valueOf(StandardCharsets.UTF_8))
+                .replace("+", "%20"); // 공백 변환
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName);
+        headers.add(HttpHeaders.CONTENT_TYPE, "application/pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(resource);
+    }
+
 
     @GetMapping("/info/{id}")
     public ResponseEntity<Map<String, Object>> getDocumentInfo(@PathVariable Long id) {
