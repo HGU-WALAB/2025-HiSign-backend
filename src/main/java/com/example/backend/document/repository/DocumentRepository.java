@@ -53,7 +53,7 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 
     @Query(value =
             "SELECT DISTINCT d.id, d.file_name, d.created_at, d.status, m.name AS requester_name, " +
-                    "       d.request_name, sr.expired_at, d.is_rejectable " +
+                    "       d.request_name, sr.expired_at, d.is_rejectable , d.updated_at " +
                     "FROM document d " +
                     "JOIN member m ON d.unique_id = m.unique_id " +
                     "JOIN signature_request sr ON d.id = sr.document_id " +

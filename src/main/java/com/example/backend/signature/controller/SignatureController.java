@@ -1,5 +1,8 @@
 package com.example.backend.signature.controller;
 
+import com.example.backend.document.entity.Document;
+import com.example.backend.document.repository.DocumentRepository;
+import com.example.backend.document.service.DocumentService;
 import com.example.backend.signature.DTO.SignatureDTO;
 import com.example.backend.signature.controller.request.SignatureFieldRequest;
 import com.example.backend.signature.controller.response.SignatureFieldResponse;
@@ -18,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,6 +33,7 @@ public class SignatureController {
     @Value("${file.signature-dir}")
     private String signatureImageBasePath;
     private final SignatureService signatureService;
+    private final DocumentRepository documentRepository;
 
     // 🔹 서명 요청에 연결된 서명 필드 조회
     // 🔹 특정 문서에서 특정 서명자의 서명 필드 조회
@@ -52,6 +57,12 @@ public class SignatureController {
             @RequestBody SignerDTO signerDTO) throws IOException {
 
         signatureService.saveSignatures(signerDTO, documentId);
+
+        // 2. 문서 수정일 업데이트
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 문서입니다."));;
+        document.setUpdatedAt(LocalDateTime.now());
+        documentRepository.save(document); // 변경 감지를 이용한 경우 생략 가능
 
         return ResponseEntity.ok("서명 정보가 성공적으로 저장되었습니다.");
     }
