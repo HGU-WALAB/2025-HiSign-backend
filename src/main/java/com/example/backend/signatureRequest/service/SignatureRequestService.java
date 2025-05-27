@@ -65,6 +65,7 @@ public class SignatureRequestService {
             Document document = documentOptional.get();
             document.setStatus(3);
             document.setCancelReason(reason);
+            document.setUpdatedAt(LocalDateTime.now());
             documentRepository.save(document);
         }
 
@@ -91,6 +92,7 @@ public class SignatureRequestService {
         if (documentOptional.isPresent()) {
             Document document = documentOptional.get();
             document.setStatus(6);
+            document.setUpdatedAt(LocalDateTime.now());
             documentRepository.save(document);
         }
 

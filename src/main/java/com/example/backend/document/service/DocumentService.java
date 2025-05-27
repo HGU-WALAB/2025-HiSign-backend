@@ -273,6 +273,7 @@ public class DocumentService {
             docMap.put("requestName", result[5] != null ? result[5] : "작업명 없음");
             docMap.put("expiredAt", result[6] != null ? result[6] : "미설정");
             docMap.put("isRejectable", result[7] != null ? result[7] : "0");
+            docMap.put("updatedAt", result[8]);
 
             documents.add(docMap);
         }
