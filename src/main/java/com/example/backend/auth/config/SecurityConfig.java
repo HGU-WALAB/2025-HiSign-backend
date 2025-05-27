@@ -63,12 +63,12 @@ public class SecurityConfig {
             .antMatchers(
                     "/api/auth/**",
                     "/api/signature-requests/check",
-                    "/api/auth/signer/**"
-//                    "/swagger-ui/**",
-//                    "/v3/api-docs/**",
-//                    "/swagger-resources/**",
-//                    "/webjars/**",
-//                    "/swagger-ui.html"
+                    "/api/auth/signer/**",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/swagger-resources/**",
+                    "/webjars/**",
+                    "/swagger-ui.html"
             ).permitAll()
             .antMatchers("/api/files/**", "/api/documents/**", "/api/signature-requests/send-mail").authenticated();
     return http.build();
