@@ -4,6 +4,7 @@ import com.example.backend.signatureRequest.DTO.SignerDTO;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -16,5 +17,6 @@ public class UploadRequestDTO {
     private Integer type;            // 문서 타입 (1=검토, 2=일반)
     private String password;         // 비회원 접근용 비밀번호 (또는 NONE)
     private String memberName;       // 업로더 이름 (메일 발송 시 필요)
+    private LocalDateTime expirationDateTime;
     private List<SignerDTO> signers; // 서명자 리스트
 }

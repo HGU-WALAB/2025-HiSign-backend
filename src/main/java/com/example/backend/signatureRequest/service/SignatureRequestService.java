@@ -31,7 +31,7 @@ public class SignatureRequestService {
     private final SignatureRequestRepository signatureRequestRepository;
     private final DocumentRepository documentRepository;
 
-    public List<SignatureRequest> createSignatureRequests(Document document, List<SignerDTO> signers, String password) {
+    public List<SignatureRequest> createSignatureRequests(Document document, List<SignerDTO> signers, String password, LocalDateTime expiredAt) {
         List<SignatureRequest> requests = signers.stream().map(signer -> {
             String token = UUID.randomUUID().toString();
             return SignatureRequest.builder()
@@ -40,7 +40,7 @@ public class SignatureRequestService {
                     .signerName(signer.getName())
                     .token(token)
                     .createdAt(LocalDateTime.now())
-                    .expiredAt(LocalDateTime.now().plusDays(7))
+                    .expiredAt(expiredAt)
                     .status(0)  // 대기 상태
                     .password(password)
                     .build();
@@ -104,9 +104,9 @@ public class SignatureRequestService {
     }
 
     @Transactional
-    public void saveSignatureRequestAndFields(Document document, List<SignerDTO> signers, String password) {
+    public void saveSignatureRequestAndFields(Document document, List<SignerDTO> signers, String password, LocalDateTime expiredAt) {
         // 1. 서명 요청 생성
-        createSignatureRequests(document, signers, password);
+        createSignatureRequests(document, signers, password, expiredAt);
 
         // 2. 서명 필드 저장
         for (SignerDTO signer : signers) {
@@ -127,13 +127,13 @@ public class SignatureRequestService {
     }
 
     @Transactional
-    public void saveRequestsAndSendMail(Document document, List<SignerDTO> signers, String password, String senderName) {
+    public void saveRequestsAndSendMail(Document document, List<SignerDTO> signers, String password, String senderName, LocalDateTime expiredAt) {
         // 1. 문서 상태 변경
         document.setStatus(0);
         documentService.save(document);
 
         // 2. 서명 요청 + 필드 저장
-        List<SignatureRequest> requests = createSignatureRequests(document, signers, password);
+        List<SignatureRequest> requests = createSignatureRequests(document, signers, password, expiredAt);
 
         for (SignerDTO signer : signers) {
             for (SignatureDTO signatureField : signer.getSignatureFields()) {

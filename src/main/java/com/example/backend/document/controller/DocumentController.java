@@ -87,10 +87,10 @@ public class DocumentController {
             if (document.getType() == 1) {
                 // 타입 1 → 검토 요청만 (메일 ❌)
                 documentService.requestCheckingById(document.getId());
-                signatureRequestService.saveSignatureRequestAndFields(document, dto.getSigners(), dto.getPassword());
+                signatureRequestService.saveSignatureRequestAndFields(document, dto.getSigners(), dto.getPassword(), dto.getExpirationDateTime());
             } else {
                 // 타입 1이 아닐 경우 → 저장 + 메일 발송
-                signatureRequestService.saveRequestsAndSendMail(document, dto.getSigners(), dto.getPassword(), dto.getMemberName());
+                signatureRequestService.saveRequestsAndSendMail(document, dto.getSigners(), dto.getPassword(), dto.getMemberName(), dto.getExpirationDateTime());
             }
 
             return ResponseEntity.ok("문서 업로드 및 서명 요청이 성공적으로 처리되었습니다.");
