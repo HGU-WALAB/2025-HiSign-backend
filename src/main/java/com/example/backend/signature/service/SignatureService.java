@@ -192,13 +192,7 @@ public class SignatureService {
     }
 
     public List<Signature> getSignaturesForDocument(Long documentId) {
-        List<Signature> signatures = signatureRepository.findByDocumentId(documentId);
-
-        if (signatures.isEmpty()) {
-            throw new IllegalArgumentException("해당 문서에 대한 서명 정보가 존재하지 않습니다.");
-        }
-
-        return signatures;
+        return signatureRepository.findByDocumentId(documentId);
     }
 
     public boolean hasExistingSignature(String signerEmail) {
