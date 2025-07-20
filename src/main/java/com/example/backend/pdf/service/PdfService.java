@@ -20,7 +20,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -71,19 +73,28 @@ public class PdfService {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PdfStamper stamper = new PdfStamper(reader, outputStream);
 
+        Map<String, Color> signerColorMap = new HashMap<>();
         int colorIndex = 0;
 
-        for (Signature signature : signatures) {
-            Color color = DEFAULT_COLORS[colorIndex % DEFAULT_COLORS.length];
-            boolean isCompleted = signature.getStatus() == 1;
-
-            if (isCompleted) {
-                addSignatureToPdf(stamper, signature, reader); // 서명 삽입
-                drawSolidBorderBox(stamper, signature, reader, color); // 테두리만
-            } else {
-                drawEmptySignatureBox(stamper, signature, color); // 빈 둥근 테두리 박스 삽입
+        for (Signature sig : signatures) {
+            String email = sig.getSignerEmail();
+            if (!signerColorMap.containsKey(email)) {
+                Color color = DEFAULT_COLORS[colorIndex % DEFAULT_COLORS.length];
+                signerColorMap.put(email, color);
+                colorIndex++;
             }
-            colorIndex++;
+        }
+
+        for (Signature signature : signatures) {
+            String email = signature.getSignerEmail();
+            Color color = signerColorMap.get(email);
+            boolean isCompleted = signature.getStatus() == 1;
+            if (isCompleted) {
+                addSignatureToPdf(stamper, signature, reader);
+                drawSolidBorderBox(stamper, signature, reader, color);
+            } else {
+                drawEmptySignatureBox(stamper, signature, color);
+            }
         }
 
         stamper.close();

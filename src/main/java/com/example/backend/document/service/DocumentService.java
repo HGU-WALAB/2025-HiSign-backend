@@ -290,7 +290,6 @@ public class DocumentService {
             document.setStatus(7);
             document.setUpdatedAt(LocalDateTime.now());
 
-            // 문서 상태 삭제로 변경
             documentRepository.save(document);
             return true;
         }
