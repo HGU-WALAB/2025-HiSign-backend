@@ -55,7 +55,7 @@ public class DocumentController {
 
     @PostMapping(value = "/full-upload", consumes = {"multipart/form-data"})
     @Transactional
-    public ResponseEntity<String> fullUpload(
+    public  ResponseEntity<Map<String, Object>> fullUpload(
             @RequestParam("file") MultipartFile file,
             @RequestPart("dto") UploadRequestDTO dto
     ) {
@@ -93,11 +93,17 @@ public class DocumentController {
                 signatureRequestService.saveRequestsAndSendMail(document, dto.getSigners(), dto.getPassword(), dto.getMemberName(), dto.getExpirationDateTime());
             }
 
-            return ResponseEntity.ok("문서 업로드 및 서명 요청이 성공적으로 처리되었습니다.");
+            // ✅ 문서 ID 포함한 응답 생성
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "문서 업로드 및 서명 요청이 성공적으로 처리되었습니다.");
+            response.put("documentId", document.getId());
+            return ResponseEntity.ok(response);
 
         } catch (IllegalArgumentException e) {
             log.warn("사용자 조회 실패: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         } catch (Exception e) {
             log.error("❌ fullUpload 실패", e);
             throw new RuntimeException("fullUpload 처리 중 오류 발생: " + e.getMessage(), e);
