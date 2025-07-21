@@ -60,4 +60,7 @@ public class Signature {
 
     private String description;
 
+    @Column(name = "save_consent", nullable = true)
+    private Boolean saveConsent;
+
 }
