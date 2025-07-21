@@ -1,8 +1,10 @@
 package com.example.backend.signatureRequest.service;
 
+import com.example.backend.auth.util.EncryptionUtil;
 import com.example.backend.document.service.DocumentService;
 import com.example.backend.mail.service.MailService;
 import com.example.backend.signature.DTO.SignatureDTO;
+import com.example.backend.signature.repository.SignatureRepository;
 import com.example.backend.signature.service.SignatureService;
 import com.example.backend.signatureRequest.DTO.SignerDTO;
 import com.example.backend.signatureRequest.entity.SignatureRequest;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -30,6 +33,7 @@ public class SignatureRequestService {
     private final DocumentService documentService;
     private final SignatureRequestRepository signatureRequestRepository;
     private final DocumentRepository documentRepository;
+    private final EncryptionUtil encryptionUtil;
 
     public List<SignatureRequest> createSignatureRequests(Document document, List<SignerDTO> signers, String password, LocalDateTime expiredAt) {
         List<SignatureRequest> requests = signers.stream().map(signer -> {
@@ -159,6 +163,11 @@ public class SignatureRequestService {
         }
     }
 
-
+    public String findTokenByDocumentIdAndEmail(Long documentId, String email) throws Exception {
+        SignatureRequest request = signatureRequestRepository
+                .findByDocumentIdAndSignerEmail(documentId, email)
+                .orElseThrow(() -> new NoSuchElementException("서명 요청 없음"));
+        return encryptionUtil.encryptUUID(request.getToken());
+    }
 
 }

@@ -10,6 +10,7 @@ import com.example.backend.signatureRequest.DTO.SignatureRequestDTO;
 import com.example.backend.signatureRequest.DTO.SignatureRequestMailDTO;
 import com.example.backend.signatureRequest.DTO.SignerDTO;
 import com.example.backend.auth.controller.request.SignatureValidationRequest;
+import com.example.backend.signatureRequest.DTO.TokenRequestDTO;
 import com.example.backend.signatureRequest.entity.SignatureRequest;
 import com.example.backend.signatureRequest.repository.SignatureRequestRepository;
 import com.example.backend.signatureRequest.service.SignatureRequestService;
@@ -209,5 +210,18 @@ public class SignatureRequestController {
         return ResponseEntity.ok(signers);
     }
 
+    @PostMapping("/token")
+    public ResponseEntity<Map<String, Object>> getTokenForDocumentAndEmail(@RequestBody TokenRequestDTO dto) {
+        try {
+            String token = signatureRequestService.findTokenByDocumentIdAndEmail(dto.getDocumentId(), dto.getEmail());
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+            return ResponseEntity.ok(response);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("error", "해당 서명 요청을 찾을 수 없습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("error", "토큰 요청중 알수 없는 에러가 발생했습니다."));
+        }
+    }
 
 }

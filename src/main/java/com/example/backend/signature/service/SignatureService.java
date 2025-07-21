@@ -134,17 +134,13 @@ public class SignatureService {
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다. ID: " + documentId));
 
-        List<SignatureRequest> signatureRequests = signatureRequestRepository.findByDocumentIdAndSignerEmail(documentId, signerEmail);
+        SignatureRequest signatureRequest = signatureRequestRepository
+                .findByDocumentIdAndSignerEmail(documentId, signerEmail)
+                .orElseThrow(() -> new IllegalArgumentException("해당 문서에 대한 서명 요청이 존재하지 않습니다."));
 
-        if (signatureRequests.isEmpty()) {
-            throw new IllegalArgumentException("해당 문서에 대한 서명 요청이 존재하지 않습니다.");
-        }
-
-        // ✅ 2. 해당 서명 요청을 "완료(1)" 상태로 변경
-        for (SignatureRequest request : signatureRequests) {
-            request.setStatus(1); // 서명 완료 상태
-        }
-        signatureRequestRepository.saveAll(signatureRequests);
+        //2. 서명 상태 변경
+        signatureRequest.setStatus(1); // 완료
+        signatureRequestRepository.save(signatureRequest);
 
         // 📌 3. 해당 문서의 모든 서명 요청이 완료되었는지 확인
         boolean allCompleted = signatureRequestRepository
