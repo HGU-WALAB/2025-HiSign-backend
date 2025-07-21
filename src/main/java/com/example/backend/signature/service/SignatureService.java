@@ -95,6 +95,7 @@ public class SignatureService {
                         existingSignature.setStatus(1);
                         existingSignature.setWidth(dto.getWidth());
                         existingSignature.setHeight(dto.getHeight());
+                        existingSignature.setSaveConsent(dto.getSaveConsent());
                         return existingSignature;
                     })
                     .collect(Collectors.toList());

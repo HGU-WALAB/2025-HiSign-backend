@@ -18,6 +18,8 @@ public class SignatureDTO {
     private SignaturePositionDTO position;  // 서명 위치
     private String imageName;
     private String textData;
+    private Boolean saveConsent;
+
 
     // 🔹 `Signature` 엔티티를 `SignatureDTO`로 변환하는 정적 메서드
     public static SignatureDTO fromEntity(Signature signature) {
@@ -32,7 +34,8 @@ public class SignatureDTO {
                         signature.getY()
                 ),
                 signature.getImageName(),
-                signature.getTextData()
+                signature.getTextData(),
+                signature.getSaveConsent()
         );
     }
 }

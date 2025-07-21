@@ -91,4 +91,10 @@ public class SignatureController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+    //이전 서명 존재 여부 관련 API
+    @GetMapping("/exists")
+    public ResponseEntity<Boolean> checkExistingSignature(@RequestParam String signerEmail) {
+        boolean exists = signatureService.hasExistingSignature(signerEmail);
+        return ResponseEntity.ok(exists);
+    }
 }
