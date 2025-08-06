@@ -1,18 +1,18 @@
 package com.example.backend.member.controller;
 
 import com.example.backend.auth.dto.AuthDto;
+import com.example.backend.member.DTO.MemberActiveUpdateRequest;
+import com.example.backend.member.DTO.MemberDTO;
 import com.example.backend.member.DTO.SearchMemberDTO;
 import com.example.backend.member.service.MemberService;
+import com.example.backend.member.DTO.BulkInsertResultDTO;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -62,4 +62,25 @@ public class MemberController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
+
+    @GetMapping("/members")
+    public ResponseEntity<List<MemberDTO>> fetchMembers() {
+        List<MemberDTO> result = memberService.getMembers();
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/bulk")
+    public ResponseEntity<BulkInsertResultDTO> addMembersFromString(@RequestBody String input) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(memberService.addMembersFromString(input));
+    }
+
+    @PatchMapping("/{uniqueId}/active")
+    public ResponseEntity<MemberDTO> updateActiveStatus(
+            @PathVariable String uniqueId,
+            @RequestBody MemberActiveUpdateRequest request) {
+
+        MemberDTO updated = memberService.updateMemberActiveStatus(uniqueId, request.getActive());
+        return ResponseEntity.ok(updated);
+    }
+
 }

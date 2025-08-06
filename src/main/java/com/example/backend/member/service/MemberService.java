@@ -1,12 +1,16 @@
 package com.example.backend.member.service;
 
+import com.example.backend.member.DTO.BulkInsertResultDTO;
+import com.example.backend.member.DTO.MemberDTO;
 import com.example.backend.member.DTO.SearchMemberDTO;
 import com.example.backend.member.entity.Member;
 import com.example.backend.member.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -61,4 +65,87 @@ public class MemberService {
         else if (grade == -1) return "교수님";
         return "학생";
     }
+
+    public List<MemberDTO> getMembers() {
+        List<Member> members = memberRepository.findAll();
+        return members.stream()
+                .map(member -> new MemberDTO(
+                        member.getUniqueId(),
+                        member.getName(),
+                        member.getEmail(),
+                        member.getActive() != null ? member.getActive() : false
+                ))
+                .collect(Collectors.toList());
+    }
+
+    public BulkInsertResultDTO addMembersFromString(String input) {
+        String[] lines = input.split("\\r?\\n");
+
+        int successCount = 0;
+        int duplicateCount = 0;
+        List<BulkInsertResultDTO.MemberResult> results = new ArrayList<>();
+
+        for (String line : lines) {
+            String[] parts = line.split(",");
+            if (parts.length != 3) {
+                results.add(new BulkInsertResultDTO.MemberResult("", "", "", false, "형식 오류"));
+                continue;
+            }
+
+            String name = parts[0].trim();
+            String uniqueId = parts[1].trim();
+            String email = parts[2].trim();
+
+            if (name.isEmpty() || uniqueId.isEmpty() || email.isEmpty()) {
+                results.add(new BulkInsertResultDTO.MemberResult(name, uniqueId, email, false, "빈 필드 존재"));
+                continue;
+            }
+
+            Optional<Member> existingMemberOpt = memberRepository.findByUniqueIdOrEmail(uniqueId, email);
+            if (existingMemberOpt.isPresent()) {
+                Member existing = existingMemberOpt.get();
+                if (Boolean.FALSE.equals(existing.getActive())) {
+                    existing.setActive(true);
+                    memberRepository.save(existing);
+                    results.add(new BulkInsertResultDTO.MemberResult(name, uniqueId, email, false, "이미 존재하여 활성화 처리됨"));
+                } else {
+                    results.add(new BulkInsertResultDTO.MemberResult(name, uniqueId, email, false, "이미 활성화된 회원"));
+                }
+                duplicateCount++;
+                continue;
+            }
+            // 신규 회원 저장
+            Member member = Member.builder()
+                    .name(name)
+                    .uniqueId(uniqueId)
+                    .email(email)
+                    .active(true)
+                    .level(0)
+                    .semester(0)
+                    .loginTime(null) // 처음 추가 시 로그인 시간 없음
+                    .build();
+
+            memberRepository.save(member);
+            successCount++;
+            results.add(new BulkInsertResultDTO.MemberResult(name, uniqueId, email, true, "추가됨"));
+        }
+
+        return new BulkInsertResultDTO(
+                lines.length,
+                successCount,
+                duplicateCount,
+                results
+        );
+    }
+
+    public MemberDTO updateMemberActiveStatus(String uniqueId, Boolean active) {
+        Member member = (Member) memberRepository.findByUniqueId(uniqueId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다: " + uniqueId));
+
+        member.setActive(active != null ? active : false); // null 방지
+
+        Member saved = memberRepository.save(member);
+        return new MemberDTO(saved);
+    }
+
 }

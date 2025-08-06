@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "member")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -35,7 +36,7 @@ public class Member extends BaseTime implements Serializable {
     @Column(name = "login_time")
     private LocalDateTime loginTime;
 
-    @Column(nullable = false, length = 50)
+    @Column(length = 50)
     private String department;
 
     @Column(length = 50)
@@ -47,12 +48,14 @@ public class Member extends BaseTime implements Serializable {
     @Column
     private Integer grade;
 
-    @Column(nullable = false)
+    @Column
     private Integer semester;
 
-    @Column(nullable = false)
+    @Column
     private Integer level;
 
+    @Column
+    private Boolean active;
 
     public void update(AuthDto dto) {
         this.name = dto.getName();
