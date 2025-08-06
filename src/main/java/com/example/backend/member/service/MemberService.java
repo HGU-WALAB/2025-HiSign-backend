@@ -148,4 +148,27 @@ public class MemberService {
         return new MemberDTO(saved);
     }
 
+    public MemberDTO addMember(MemberDTO dto) {
+        // 중복 검사
+        boolean exists = memberRepository.existsByUniqueId(dto.getUniqueId()) ||
+                memberRepository.existsByEmail(dto.getEmail());
+
+        if (exists) {
+            throw new IllegalArgumentException("이미 존재하는 회원입니다.");
+        }
+
+        Member member = Member.builder()
+                .name(dto.getName())
+                .uniqueId(dto.getUniqueId())
+                .email(dto.getEmail())
+                .active(true)
+                .level(0)
+                .semester(0)
+                .loginTime(null)
+                .build();
+
+        Member saved = memberRepository.save(member);
+
+        return new MemberDTO(saved);
+    }
 }
