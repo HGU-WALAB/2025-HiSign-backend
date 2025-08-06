@@ -23,4 +23,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     @Query("SELECT m.uniqueId FROM Member m WHERE m.email = :email")
     String findUniqueIdByEmail(@Param("email") String email);
+
+    Optional<Member> findByUniqueIdOrEmail(String uniqueId, String email);
 }
