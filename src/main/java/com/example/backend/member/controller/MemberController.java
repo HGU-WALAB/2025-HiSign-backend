@@ -69,6 +69,12 @@ public class MemberController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/add")
+    public ResponseEntity<MemberDTO> addMember(@RequestBody MemberDTO dto) {
+        MemberDTO created = memberService.addMember(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
     @PostMapping("/bulk")
     public ResponseEntity<BulkInsertResultDTO> addMembersFromString(@RequestBody String input) {
         return ResponseEntity.status(HttpStatus.CREATED).body(memberService.addMembersFromString(input));
