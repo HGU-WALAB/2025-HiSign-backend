@@ -26,4 +26,7 @@ public interface SignatureRepository extends JpaRepository<Signature, Long> {
 
     Optional<Signature> findFirstBySignerEmailAndTypeAndImageNameIsNotNullOrderBySignedAtDesc(String signerEmail, int type);
 
+    @Query("SELECT COUNT(s) > 0 FROM Signature s WHERE s.signerEmail = :signerEmail AND s.saveConsent = true AND s.status = 1 AND s.imageName IS NOT NULL")
+    boolean existsSavedSignature(@Param("signerEmail") String signerEmail);
+
 }

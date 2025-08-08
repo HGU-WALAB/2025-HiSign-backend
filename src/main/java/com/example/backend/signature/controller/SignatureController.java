@@ -94,7 +94,8 @@ public class SignatureController {
     //이전 서명 존재 여부 관련 API
     @GetMapping("/exists")
     public ResponseEntity<Boolean> checkExistingSignature(@RequestParam String signerEmail) {
-        boolean exists = signatureService.hasExistingSignature(signerEmail);
+        boolean exists = signatureService.hasSavedSignature(signerEmail);
         return ResponseEntity.ok(exists);
     }
+
 }

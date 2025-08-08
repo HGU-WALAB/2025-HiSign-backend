@@ -200,4 +200,8 @@ public class SignatureService {
         // type = 0 → 이미지 서명
         return signatureRepository.findFirstBySignerEmailAndTypeAndImageNameIsNotNullOrderBySignedAtDesc(signerEmail, 0);
     }
+
+    public boolean hasSavedSignature(String signerEmail) {
+        return signatureRepository.existsSavedSignature(signerEmail);
+    }
 }
