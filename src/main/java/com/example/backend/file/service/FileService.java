@@ -5,9 +5,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -16,14 +19,14 @@ public class FileService {
 
     private final Path signatureStorageLocation;
     private final Path documentStorageLocation;
-    private final Path signedDocumentStorageLocation;
+    private final Path subjectFilePath ;
 
     public FileService(@Value("${file.signature-dir}") String signatureDir,
                        @Value("${file.document-dir}") String documentDir,
-                       @Value("${file.signed-document-dir}") String signedDocumentDir) {
+                       @Value("${file.subjects-path}") String subjectFilePath) {
         this.signatureStorageLocation = this.createDirectory(signatureDir);
         this.documentStorageLocation = this.createDirectory(documentDir);
-        this.signedDocumentStorageLocation = this.createDirectory(signedDocumentDir);
+        this.subjectFilePath = this.createDirectory(subjectFilePath);
     }
 
     public Path createDirectory(String dir) {
@@ -63,13 +66,15 @@ public class FileService {
     }
 
 
-    public byte[] readFile(String fileName, Path storageLocation) {
-        try {
-            Path filePath = storageLocation.resolve(fileName).normalize();
-            return Files.readAllBytes(filePath);
-        } catch (IOException e) {
-            throw new RuntimeException("파일 읽기 중 오류 발생: " + fileName, e);
-        }
+    public List<String> readSubjectList() throws IOException {
+        return Files.readAllLines(subjectFilePath, StandardCharsets.UTF_8);
+    }
+
+    public void saveSubjectList(String content) throws IOException {
+        Files.write(subjectFilePath,
+                content.getBytes(StandardCharsets.UTF_8),
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     public void deleteFile(String fileName, String fileType) {
@@ -111,7 +116,5 @@ public class FileService {
         return documentStorageLocation.resolve(fileName);
     }
 
-    public Path getSignedDocumentFilePath(String fileName) {
-        return signedDocumentStorageLocation.resolve(fileName);
-    }
+
 }
