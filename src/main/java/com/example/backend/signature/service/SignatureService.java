@@ -104,6 +104,7 @@ public class SignatureService {
         signatureRepository.saveAll(updatedSignatures);
 
         completeSignatureRequest(documentId,signerDTO.getEmail());
+
     } catch (Exception e) {
             // ✅ 첫 번째 서명 필드에서 이미지 파일명 추출 (파일이 하나만 업로드되므로 한 번만 가져오면 됨)
             String uploadedImageName = signerDTO.getSignatureFields().stream()
@@ -149,7 +150,7 @@ public class SignatureService {
                 .stream()
                 .allMatch(request -> request.getStatus() == 1);
 
-        if (allCompleted) {
+        if (allCompleted && document.getStatus() == 0) {
             try {
                 // ✅ 4. 서명 정보 가져오기
                 List<Signature> signatures = getSignaturesForDocument(documentId);
@@ -165,8 +166,8 @@ public class SignatureService {
                     }
                 }
 
-                // ✅ 7. (메일 발송 완료 후) 문서 상태를 "완료(1)"로 변경
                 document.setStatus(1); // 문서 상태를 완료로 변경
+
                 documentRepository.save(document);
 
             } catch (Exception e) {
@@ -193,7 +194,7 @@ public class SignatureService {
     }
 
     public boolean hasExistingSignature(String signerEmail) {
-        return signatureRepository.existsBySignerEmailAndStatus(signerEmail, 1);
+        return signatureRepository.existsBySignerEmailAndSaveConsent(signerEmail, true);
     }
 
     public Optional<Signature> getLatestImageSignature(String signerEmail) {

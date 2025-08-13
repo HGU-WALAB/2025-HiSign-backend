@@ -8,14 +8,13 @@ import com.example.backend.member.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class MemberService {
     private final MemberRepository memberRepository;
+    private static final Set<String> TEACHER_IDS = new HashSet<>(Arrays.asList("50666", "50654"));
 
     public MemberService(MemberRepository memberRepository) {
         this.memberRepository = memberRepository;
@@ -61,8 +60,15 @@ public class MemberService {
     }
 
     private String convertGradeToPosition(Integer grade, String uniqueId) {
-        if (uniqueId.equals("50666") || uniqueId.equals("50654")) return "선생님";
-        else if (grade == -1) return "교수님";
+        // 특정 uniqueId는 선생님 처리
+        if (TEACHER_IDS.contains(uniqueId)) {
+            return "선생님";
+        }
+        // grade == -1 을 널 세이프하게 비교
+        if (Objects.equals(grade, -1)) {
+            return "교수님";
+        }
+        // 기본값
         return "학생";
     }
 
@@ -86,7 +92,7 @@ public class MemberService {
         List<BulkInsertResultDTO.MemberResult> results = new ArrayList<>();
 
         for (String line : lines) {
-            String[] parts = line.split(",");
+            String[] parts = line.trim().split("\\s+");
             if (parts.length != 3) {
                 results.add(new BulkInsertResultDTO.MemberResult("", "", "", false, "형식 오류"));
                 continue;
