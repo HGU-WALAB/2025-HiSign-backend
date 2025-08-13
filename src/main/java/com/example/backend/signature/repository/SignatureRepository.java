@@ -22,7 +22,7 @@ public interface SignatureRepository extends JpaRepository<Signature, Long> {
     @Query("SELECT DISTINCT s.signerEmail FROM Signature s WHERE s.document.id = :documentId")
     List<String> findSignerEmailsByDocumentId(@Param("documentId") Long documentId);
 
-    boolean existsBySignerEmailAndStatus(String signerEmail, int status);
+    boolean existsBySignerEmailAndSaveConsent(String signerEmail, Boolean saveConsent);
 
     Optional<Signature> findFirstBySignerEmailAndTypeAndImageNameIsNotNullOrderBySignedAtDesc(String signerEmail, int type);
 

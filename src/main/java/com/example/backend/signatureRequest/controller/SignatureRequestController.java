@@ -44,6 +44,15 @@ public class SignatureRequestController {
         Document document = documentService.getDocumentById(requestDto.getDocumentId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문서를 찾을 수 없습니다."));
 
+        boolean allCompleted = signatureRequestRepository
+                .findByDocumentId(requestDto.getDocumentId())
+                .stream()
+                .allMatch(request -> request.getStatus() == 1);
+        if (allCompleted) {
+            document.setStatus(1);
+            documentService.save(document);
+            return ResponseEntity.ok("검토와 서명이 완료되었습니다.");
+        }
         try {
             // ✅ 문서 상태를 0으로 수정
             document.setStatus(0);
