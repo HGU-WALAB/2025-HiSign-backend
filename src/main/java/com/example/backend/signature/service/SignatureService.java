@@ -150,6 +150,12 @@ public class SignatureService {
                 .stream()
                 .allMatch(request -> request.getStatus() == 1);
 
+        //작업중(8)일 경우, 검토중(0) 혹은 서명 중으로 변경
+        if(document.getStatus() == 8){
+            if(document.getType() != 1) document.setStatus(0);
+            else document.setStatus(7);
+            documentRepository.save(document);
+        }
         if (allCompleted && document.getStatus() == 0) {
             try {
                 // ✅ 4. 서명 정보 가져오기

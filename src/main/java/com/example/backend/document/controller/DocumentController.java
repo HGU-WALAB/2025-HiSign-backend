@@ -61,6 +61,8 @@ public class DocumentController {
     ) {
         log.info("📥 fullUpload 요청 수신 - uniqueId: {}", dto.getUniqueId());
         log.info("📦 파일 이름: {}", file.getOriginalFilename());
+        if(dto.getIsSelfIncluded()) log.debug("본인 서명 포함 작업");
+        else log.debug("본인 서명 미 포함 작업");
         try {
             // 1. 파일 저장
             String storedFileName = fileService.storeFile(file, "DOCUMENT");
@@ -73,7 +75,8 @@ public class DocumentController {
             document.setRequestName(dto.getRequestName());
             document.setFileName(file.getOriginalFilename());
             document.setSavedFileName(storedFileName);
-            document.setStatus(0);
+            if(dto.getIsSelfIncluded()) document.setStatus(8);
+            else document.setStatus(0);
             document.setIsRejectable(dto.getIsRejectable());
             document.setDescription(dto.getDescription());
             document.setType(dto.getType());
@@ -86,7 +89,7 @@ public class DocumentController {
             // 4. 타입에 따라 분기
             if (document.getType() == 1) {
                 // 타입 1 → 검토 요청만 (메일 ❌)
-                documentService.requestCheckingById(document.getId());
+                if(!dto.getIsSelfIncluded()) documentService.requestCheckingById(document.getId());
                 signatureRequestService.saveSignatureRequestAndFields(document, dto.getSigners(), dto.getPassword(), dto.getExpirationDateTime());
             } else {
                 // 타입 1이 아닐 경우 → 저장 + 메일 발송
