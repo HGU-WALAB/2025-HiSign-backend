@@ -18,7 +18,7 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     List<Document> findDocumentsBySignerEmail(@Param("email") String email);
 
     @Query(value =
-            "SELECT DISTINCT d.id, d.file_name, d.created_at, d.status, d.request_name, sr.expired_at, sr.token " +
+            "SELECT DISTINCT d.id, d.file_name, d.created_at, d.status, d.request_name, sr.expired_at " +
                     "FROM document d " +
                     "JOIN member m ON d.unique_id = m.unique_id " + // ← JOIN 추가
                     "LEFT JOIN signature_request sr ON d.id = sr.document_id " +

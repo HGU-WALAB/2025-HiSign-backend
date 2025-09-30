@@ -71,6 +71,8 @@ public class DocumentService {
         List<Object[]> results = documentRepository.findDocumentsWithExpiration(uniqueId);
         LocalDateTime now = LocalDateTime.now();
 
+        String email =  memberRepository.findEmailByUniqueId(uniqueId) .orElse(null);
+
         if (results == null || results.isEmpty()) {
             log.error("[ERROR] 요청한 문서 데이터가 존재하지 않음. uniqueId: {}", uniqueId);
             return new ArrayList<>();
@@ -103,7 +105,11 @@ public class DocumentService {
                 docMap.put("requestName", result[4] != null ? result[4] : "작업명 없음");
                 docMap.put("expiredAt", expiredAt != null ? expiredAt : "미설정");
 
-                String token = (String) result[6];
+                log.debug("문서 조회용 doc ID: {}", docId);
+                log.debug("문서 조회용 이메일: {}", email);
+                String token = signatureRequestRepository.findTokenByDocumentIdAndEmail(docId, email)
+                        .orElse(null);
+                log.debug("보낸 리스트 본인 토튼: {}", token);
                 if (token != null) {
                     try {
                         String encryptedToken = encryptionUtil.encryptUUID(token);
