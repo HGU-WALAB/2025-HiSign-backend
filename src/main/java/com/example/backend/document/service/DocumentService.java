@@ -103,6 +103,19 @@ public class DocumentService {
                 docMap.put("requestName", result[4] != null ? result[4] : "작업명 없음");
                 docMap.put("expiredAt", expiredAt != null ? expiredAt : "미설정");
 
+                String token = (String) result[6];
+                if (token != null) {
+                    try {
+                        String encryptedToken = encryptionUtil.encryptUUID(token);
+                        docMap.put("token", encryptedToken);
+                    } catch (Exception e) {
+                        log.error("[ERROR] 토큰 암호화 실패: {}", e.getMessage());
+                        docMap.put("token", "암호화 실패");
+                    }
+                } else {
+                    docMap.put("token", "토큰 없음");
+                }
+
                 documents.add(docMap);
             } catch (Exception e) {
                 log.error("[ERROR] 요청한 문서 데이터 매핑 중 오류 발생: {}", e.getMessage());

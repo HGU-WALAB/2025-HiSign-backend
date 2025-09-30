@@ -19,4 +19,5 @@ public class UploadRequestDTO {
     private String memberName;       // 업로더 이름 (메일 발송 시 필요)
     private LocalDateTime expirationDateTime;
     private List<SignerDTO> signers; // 서명자 리스트
+    private Boolean isSelfIncluded;  // 작성자가 서명자로 포함되어있는지 여부 이에 따라 상태를 0(검토중)혹은 8(작성중)로 저장
 }

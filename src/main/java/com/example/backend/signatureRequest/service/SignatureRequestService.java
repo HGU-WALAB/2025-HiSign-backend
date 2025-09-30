@@ -132,9 +132,6 @@ public class SignatureRequestService {
 
     @Transactional
     public void saveRequestsAndSendMail(Document document, List<SignerDTO> signers, String password, String senderName, LocalDateTime expiredAt) {
-        // 1. 문서 상태 변경
-        document.setStatus(0);
-        documentService.save(document);
 
         // 2. 서명 요청 + 필드 저장
         List<SignatureRequest> requests = createSignatureRequests(document, signers, password, expiredAt);
