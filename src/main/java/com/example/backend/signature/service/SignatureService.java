@@ -1,5 +1,6 @@
 package com.example.backend.signature.service;
 
+import com.example.backend.auth.exception.MailTimeoutException;
 import com.example.backend.document.entity.Document;
 import com.example.backend.document.repository.DocumentRepository;
 import com.example.backend.document.service.DocumentService;
@@ -175,6 +176,10 @@ public class SignatureService {
                 document.setStatus(1); // 문서 상태를 완료로 변경
 
                 documentRepository.save(document);
+
+            } catch (MailTimeoutException e) {
+                // ✅ 타임아웃은 그대로 다시 던져서 @RestControllerAdvice에서 처리하게 함
+                throw e;
 
             } catch (Exception e) {
                 throw new RuntimeException("서명 완료 과정에서 오류 발생: " + e.getMessage(), e);
