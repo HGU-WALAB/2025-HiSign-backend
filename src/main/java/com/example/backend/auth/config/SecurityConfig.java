@@ -6,6 +6,7 @@ import com.example.backend.auth.filter.SignerTokenFilter;
 import com.example.backend.auth.service.AuthService;
 import com.example.backend.auth.util.CookieUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +29,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+  @Autowired
+  private ExceptionHandlerFilter exceptionHandlerFilter;
   private final AuthService authService;
   private final CookieProperties cookieProperties;
   private final CookieUtil cookieUtil;
@@ -43,7 +46,7 @@ public class SecurityConfig {
     http.cors()
             .and()
             .csrf(AbstractHttpConfigurer::disable)
-            .addFilterBefore(new ExceptionHandlerFilter(), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(exceptionHandlerFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(new SignerTokenFilter(SECRET_KEY), UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(
                     new JwtTokenFilter(authService, cookieProperties, cookieUtil, SECRET_KEY),
