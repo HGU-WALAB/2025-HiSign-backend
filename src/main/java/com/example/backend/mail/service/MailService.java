@@ -1,6 +1,5 @@
 package com.example.backend.mail.service;
 
-import com.example.backend.auth.exception.MailTimeoutException;
 import com.example.backend.auth.util.EncryptionUtil;
 import com.example.backend.document.entity.Document;
 import com.example.backend.signatureRequest.entity.SignatureRequest;
@@ -12,12 +11,11 @@ import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import java.net.SocketTimeoutException;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -175,13 +173,6 @@ public class MailService {
 
             mailSender.send(message);
         } catch (MailSendException e) {
-            // 1) failedMessages 안에 SocketTimeoutException이 있는지 확인
-            if (hasTimeoutInFailedMessages(e)
-                    || e.getMessage().contains("Read timed out")) { // 안전빵으로 메시지도 함께 체크
-
-                log.error("❌ 메일 서버 응답 타임아웃 (서명 완료 메일): {}", e.getMessage(), e);
-                throw new MailTimeoutException("메일 서버 응답 시간이 초과되었습니다.", e);
-            }
             log.error("❌ 이메일 전송 실패 (SMTP 문제): {}", e.getMessage(), e);
             throw new RuntimeException("이메일 전송 중 SMTP 오류 발생", e);
         } catch (MessagingException e) {
@@ -232,13 +223,6 @@ public class MailService {
             mailSender.send(message);
 
         } catch (MailSendException e) {
-            // 1) failedMessages 안에 SocketTimeoutException이 있는지 확인
-            if (hasTimeoutInFailedMessages(e)
-                    || e.getMessage().contains("Read timed out")) { // 안전빵으로 메시지도 함께 체크
-
-                log.error("❌ 메일 서버 응답 타임아웃 (서명 거절 메일): {}", e.getMessage(), e);
-                throw new MailTimeoutException("메일 서버 응답 시간이 초과되었습니다.", e);
-            }
             log.error("❌ 반려 이메일 전송 실패 (SMTP 문제): {}", e.getMessage(), e);
             throw new RuntimeException("이메일 전송 중 SMTP 오류 발생", e);
         } catch (MessagingException e) {
@@ -249,22 +233,5 @@ public class MailService {
 
     private String safeText(String input) {
         return input != null ? input : "";
-    }
-    private boolean hasTimeoutInFailedMessages(MailSendException e) {
-        Map<Object, Exception> failed = e.getFailedMessages();
-        if (failed == null || failed.isEmpty()) {
-            return false;
-        }
-
-        for (Exception ex : failed.values()) {
-            Throwable t = ex;
-            while (t != null && t != t.getCause()) {
-                if (t instanceof SocketTimeoutException) {
-                    return true;
-                }
-                t = t.getCause();
-            }
-        }
-        return false;
     }
 }
